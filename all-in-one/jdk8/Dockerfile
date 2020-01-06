@@ -173,8 +173,8 @@ RUN pip install --user -r /tmp/requirements.txt \
     cd ../ && \
     bash scripts/coursier.sh bootstrap \
         -r jitpack \
-        -i user -I user:sh.almond:scala-kernel-api_$SCALA_VERSION:$ALMOND_VERSION \
-        sh.almond:scala-kernel_$SCALA_VERSION:$ALMOND_VERSION \
+        -i user -I user:sh.almond:scala-kernel-api_${SCALA_VERSION}:${ALMOND_VERSION} \
+        sh.almond:scala-kernel_${SCALA_VERSION}:${ALMOND_VERSION} \
         -o almond && \
     ./almond --install \
  && cd /tmp \
