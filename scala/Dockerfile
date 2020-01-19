@@ -37,7 +37,9 @@ ARG DEPENDENCIES="\
      curl \
      libcurl4-openssl-dev \
      libssl-dev \
-     build-essential"
+     build-essential \
+     python3 \
+     python3-pip"
 
 # Install sbt and almond
 ARG SBT_HOME
