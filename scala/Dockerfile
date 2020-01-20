@@ -1,4 +1,4 @@
-ARG SBT_VERSION=1.3.6
+ARG SBT_VERSION=1.3.7
 ARG SCALA_VERSION=2.13.1
 ARG SBT_HOME=/usr/local/sbt
 ARG SCALA_HOME=/usr/local/scala
@@ -22,7 +22,8 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && curl -sL "https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.tgz" | tar -xz -C /usr/local \
  && mv ${SCALA_HOME}-${SCALA_VERSION} ${SCALA_HOME} \
  && curl -sL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
- && git clone https://github.com/almond-sh/almond.git
+ && git clone https://github.com/almond-sh/almond.git \
+ && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 
 
 FROM poad/docker-openjdk:13
@@ -37,7 +38,10 @@ ARG DEPENDENCIES="\
      curl \
      libcurl4-openssl-dev \
      libssl-dev \
-     build-essential"
+     build-essential \
+     python3 \
+     python3-distutils \
+     ca-certificates"
 
 # Install sbt and almond
 ARG SBT_HOME
@@ -48,6 +52,7 @@ ARG ALMOND_VERSION
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
 COPY --from=downloader ${SCALA_HOME} ${SCALA_HOME}
 COPY --chown=1000:1000 --from=downloader /tmp/almond /tmp/almond
+COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
 ENV SBT_HOME="${SBT_HOME}" \
     SCALA_HOME="${SCALA_HOME}" \
@@ -56,10 +61,11 @@ ENV SBT_HOME="${SBT_HOME}" \
 WORKDIR /tmp/almond/project
 
 # Install Python and Jupyter
-RUN apt-get update  -qq\
+RUN apt-get update  -qq \
  && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
- && pip3 --no-cache-dir install -U setuptools pip \
- && pip3 --no-cache-dir install -U jupyter notebook jupyterlab jupyterhub \
+ && python3 /tmp/get-pip.py \
+ && pip --no-cache-dir install -U setuptools \
+ && pip --no-cache-dir install -U jupyter notebook jupyterlab jupyterhub \
           sqlalchemy tornado jinja2 traitlets requests \
           jupyter_core jupyter_client \
  && jupyter notebook --generate-config --allow-root \
