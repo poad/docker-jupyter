@@ -5,7 +5,7 @@ ARG ZULU_ARCH="zulu${ZULU_VERSION}-ca-jdk${JDK_VERSION}-linux_musl_x64.tar.gz"
 ARG JAVA_HOME="/usr/lib/jvm/zulu-11"
 ARG JAVA_URL="https://cdn.azul.com/zulu/bin/${ZULU_ARCH}"
 
-ARG SBT_VERSION="1.3.6"
+ARG SBT_VERSION="1.3.8"
 ARG SCALA_VERSION="2.13.1"
 ARG ALMOND_VERSION="0.9.1"
 ARG IERL_VERSION="0.4.0"
@@ -167,7 +167,7 @@ RUN pip install --user -r /tmp/requirements.txt \
  && git clone https://github.com/almond-sh/almond.git && \
     cd almond/project && \
     mv build.properties build.properties.bak && \
-    sed -e "s/1\.3\.2/${SBT_VERSION}/g" build.properties.bak > build.properties && \
+    sed -e "s/1\.3\.3/${SBT_VERSION}/g" build.properties.bak > build.properties && \
     rm -f build.properties.bak && \
     cd ../ && \
     bash scripts/coursier.sh bootstrap \
