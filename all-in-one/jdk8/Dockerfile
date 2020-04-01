@@ -5,7 +5,7 @@ ARG ZULU_ARCH="zulu${ZULU_VERSION}-ca-jdk${JDK_VERSION}-linux_musl_x64.tar.gz"
 ARG JAVA_HOME="/usr/lib/jvm/zulu-11"
 ARG JAVA_URL="https://cdn.azul.com/zulu/bin/${ZULU_ARCH}"
 
-ARG SBT_VERSION="1.3.8"
+ARG SBT_VERSION="1.3.9"
 ARG SCALA_VERSION="2.13.1"
 ARG ALMOND_VERSION="0.9.1"
 ARG IERL_VERSION="0.4.0"
@@ -181,14 +181,6 @@ RUN pip install --user -r /tmp/requirements.txt \
  && cd evcxr/evcxr_jupyter \
  && cargo install evcxr_jupyter \
  && evcxr_jupyter --install  \
- && cd /tmp \
- && git clone https://github.com/ligee/kotlin-jupyter.git \
- && cd /tmp/kotlin-jupyter \
- && mv build.gradle build.gradle.bak \
- && sed -e "s/'1\.2\.21'/'1.3.61'/g" build.gradle.bak > build.gradle \
- && mv gradle/wrapper/gradle-wrapper.properties gradle/wrapper/gradle-wrapper.properties.bak \
- && sed -e "s/5\.6\.2/6.0.1/g" gradle/wrapper/gradle-wrapper.properties.bak > gradle/wrapper/gradle-wrapper.properties \
- && ./gradlew install \
  && cd ${USER_HOME} \
  && chmod u+x ierl \
  && ./ierl install elixir --user \
