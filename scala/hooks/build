@@ -13,8 +13,8 @@ fi
 DOCKER_CONTENT_TRUST=1
 
 docker build --build-arg BASE_TAG=${DOCKER_TAG} \
-    --build-arg SBT_VERSION="1.3.9" \
-    --build-arg SCALA_VERSION="2.13.1" \
+    --build-arg SBT_VERSION="1.3.10" \
+    --build-arg SCALA_VERSION="2.12.8" \
     --build-arg ALMOND_VERSION="0.9.1" \
     ${DOCKERFILE_PATH_ARG} -t $IMAGE_NAME .
 
