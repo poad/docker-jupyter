@@ -1,0 +1,17 @@
+os: linux
+
+language: bash
+services: docker
+
+env:
+  matrix:
+    - TAG=java DIRECTORY=java
+    - TAG=rust DIRECTORY=rust
+    - TAG=scala DIRECTORY=scala
+    - TAG=nodejs DIRECTORY=nodejs
+    - TAG=typescript DIRECTORY=typescript
+    - TAG=all-in-one-jdk8 DIRECTORY=all-in-one/jdk8
+    - TAG=all-in-one-jdk11 DIRECTORY=all-in-one/jdk11
+
+script:
+  - bash -x build.sh "${TAG}" "${DIRECTORY}"

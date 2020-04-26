@@ -45,7 +45,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && wget https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl
 
 
-FROM alpine:3
+FROM node:${NODE_VERSION}-alpine
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
@@ -62,7 +62,7 @@ ARG SBT_VERSION
 ARG SCALA_VERSION
 ARG ALMOND_VERSION
 ARG IERL_VERSION
-ARG USER_NAME="jupyter"
+ARG USER_NAME="node"
 ARG USER_HOME=/home/${USER_NAME}
 
 RUN echo "SBT_VERSION: ${SBT_VERSION}" \
@@ -80,9 +80,6 @@ ENV SBT_HOME=/usr/local/sbt \
     CC=/usr/bin/clang \
     CXX=/usr/bin/clang++ \
     PATH=${PATH}:${SBT_HOME}/bin:/root/.cargo/bin:/usr/local/bin:${USER_HOME}/.mix/:${USER_HOME}/.ierl:${JAVA_HOME}/bin
-
-RUN addgroup -g 1000 -S ${USER_NAME} \
- && adduser -u 1000 -S  ${USER_NAME} -G ${USER_NAME}
 
 USER ${USER_NAME}
 
@@ -103,6 +100,9 @@ ARG MAN_DIR=/usr/share/man/man1
 
 COPY --from=downloader ${JAVA_HOME} ${JAVA_HOME}
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
+COPY --chown=1000:1000 assets/tmp/requirements.txt /tmp/requirements.txt
+COPY --chown=1000:1000 --from=downloader /tmp/evcxr /tmp/evcxr
+COPY --chown=1000:1000 --from=downloader /tmp/ierl /tmp/ierl 
 
 RUN apk --update add --no-cache --virtual .build-deps \
     binutils-gold \
@@ -161,20 +161,20 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && npm install -g --unsafe-perm itypescript \
  && its --install=global \
  && npm install -g --unsafe-perm ijavascript \
- && ijsinstall --install=global
+ && ijsinstall --install=global \
+ && rm -f /tmp/requirements.txt \
+ && cd /tmp \
+ && chmod u+x ierl \
+ && ./ierl install elixir \
+ && ./ierl install lfe \
+ && ./ierl install erlang
 
-COPY --chown=1000:1000 assets/tmp/requirements.txt /tmp/requirements.txt
-COPY --chown=1000:1000 --from=downloader /tmp/evcxr /tmp/evcxr
-COPY --chown=1000:1000 --from=downloader /tmp/ierl ${USER_HOME}/ierl 
 
 USER ${USER_NAME}
 
-RUN pip install --user -r /tmp/requirements.txt \
- && jupyter serverextension enable --py jupyterlab \
- && jupyter nbextension enable --py widgetsnbextension \
- && jupyter notebook --generate-config --allow-root \
- && rm -f /tmp/requirements.txt \
- && cd /tmp \
+WORKDIR /tmp
+
+RUN jupyter notebook --generate-config --allow-root \
  && git clone https://github.com/almond-sh/almond.git && \
     cd almond/project && \
     mv build.properties build.properties.bak && \
@@ -186,20 +186,20 @@ RUN pip install --user -r /tmp/requirements.txt \
         -i user -I user:sh.almond:scala-kernel-api_${SCALA_VERSION}:${ALMOND_VERSION} \
         sh.almond:scala-kernel_${SCALA_VERSION}:${ALMOND_VERSION} \
         -o almond && \
-    ./almond --install \
- && cd /tmp \
- && cd evcxr/evcxr_jupyter \
- && cargo install evcxr_jupyter \
- && evcxr_jupyter --install  \
- && cd ${USER_HOME} \
- && chmod u+x ierl \
- && ./ierl install elixir --user \
- && ./ierl install lfe --user \
- && ./ierl install erlang --user \
- && mkdir -p ${USER_HOME}/.jupyter \
+    ./almond --install
+
+WORKDIR /tmp/evcxr/evcxr_jupyter
+RUN cargo install evcxr_jupyter \
+ && evcxr_jupyter --install
+
+USER root
+RUN rm -rf /tmp/*
+
+USER ${USER_NAME}
+
+RUN mkdir -p ${USER_HOME}/.jupyter \
  && mkdir -p ${USER_HOME}/notebook \
- && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME} \
- && rm -rf /tmp/*
+ && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}
 
 COPY --chown=1000:1000 assets/root/.jupyter/jupyter_notebook_config.py ${USER_HOME}/.jupyter/jupyter_notebook_config.py
 
