@@ -21,6 +21,7 @@ docker build --build-arg BASE_TAG=${DOCKER_TAG} \
     --build-arg ALMOND_VERSION="0.9.1" \
     --build-arg IERL_VERSION="0.4.0" \
     --build-arg EVCXR_VERSION="0.4.6" \
+    --build-arg NODE_VERSION="lts" \
     ${DOCKERFILE_PATH_ARG} -t $IMAGE_NAME .
 
 echo "------ HOOK END - BUILD -------"

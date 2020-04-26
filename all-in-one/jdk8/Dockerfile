@@ -12,6 +12,8 @@ ARG IERL_VERSION="0.4.0"
 
 ARG EVCXR_VERSION="0.4.6"
 
+ARG NODE_VERSION="lts"
+
 FROM alpine:3 AS downloader
 
 ARG SHA256SUM
@@ -44,7 +46,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && wget https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl
 
 
-FROM alpine:3
+FROM node:${NODE_VERSION}-alpine
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
@@ -110,6 +112,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
     clang \
     clang-libs \
     clang-static \
+    curl \
     libstdc++ \
     gnupg \
     libssl1.1 \
@@ -137,11 +140,13 @@ RUN apk --update add --no-cache --virtual .build-deps \
     m4 \
     rsync \
     freetype-dev \
+    ca-certificates \
     libpng-dev \
     alpine-sdk \
     diffutils \
     libxml2-dev \
     libxslt-dev \
+    unzip \
     xz \
  && rm -rf /var/cache/apk/* \
  && cd ${BIN_DIR} \
@@ -150,8 +155,15 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && cd ${MAN_DIR} \
  && find ${JAVA_HOME}/man/man1 -type f -name "*.1" -exec ln -s {} . \; \
  && npm install -g configurable-http-proxy \
- && pip3 install -U setuptools \
- && pip3 install -U pip
+ && pip3 install -U setuptools pip \
+ && pip install -r /tmp/requirements.txt \
+ && jupyter serverextension enable --py jupyterlab --sys-prefix \
+ && jupyter nbextension enable --py widgetsnbextension \
+ && npm install -g --unsafe-perm itypescript \
+ && its --install=global \
+ && npm install -g --unsafe-perm ijavascript \
+ && ijsinstall --install=global
+
 
 COPY --chown=1000:1000 assets/tmp/requirements.txt /tmp/requirements.txt
 COPY --chown=1000:1000 --from=downloader /tmp/evcxr /tmp/evcxr
