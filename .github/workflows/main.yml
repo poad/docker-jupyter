@@ -1,0 +1,68 @@
+name: Docker build and push
+ 
+on:
+  push:
+    branches:
+    - master 
+  pull_request:
+    branches:
+      - master
+  schedule:
+    - cron:  '15 0 * * 6'
+
+jobs:
+  docker_build:
+    strategy:
+      matrix:
+        versions: [
+          { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8' },
+          { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11' },
+          { dir: 'java', tag: 'java' },
+          { dir: 'rust', tag: 'rust' },
+          { dir: 'java', tag: 'java' },
+          { dir: 'scala', tag: 'scala' },
+          { dir: 'nodejs', tag: 'nodejs' },
+          { dir: 'typescript', tag: 'typescript' }
+        ]    
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+      if: github.event_name == 'pull_request' && github.event_name != 'schedule'
+    - name: "Build  ${{ matrix.versions.tag }}"
+      if: github.event_name == 'pull_request' && github.event_name != 'schedule'
+      run: |
+        CUR=$(pwd) && \
+        cd ${{ matrix.versions.dir }} && \
+        IMAGRE_NAME=poad/docker-jupyter:${{ matrix.versions.tag }} && \
+        chmod +x hooks/build && \
+        DOCKER_TAG=${{ matrix.versions.tag }} DOCKERFILE_PATH=$(pwd)/Dockerfile IMAGE_NAME=${{ matrix.versions.tag }} hooks/build . && \
+        cd ${CUR}
+
+  docker_push:
+    strategy:
+      matrix:
+        versions: [
+          { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8' },
+          { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11' },
+          { dir: 'java', tag: 'java' },
+          { dir: 'rust', tag: 'rust' },
+          { dir: 'java', tag: 'java' },
+          { dir: 'scala', tag: 'scala' },
+          { dir: 'nodejs', tag: 'nodejs' },
+          { dir: 'typescript', tag: 'typescript' }
+        ]    
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+      if: github.event_name != 'pull_request' && github.event_name != 'schedule' && env.CHANGE_STATE != 'changed'
+    - name: Build ${{ matrix.versions.tag }} and push
+      if: github.event_name != 'pull_request' && github.event_name != 'schedule' && env.CHANGE_STATE != 'changed'
+      run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u poad --password-stdin && \
+        CUR=$(pwd) && \
+        cd ${{ matrix.versions.dir }} && \
+        IMAGRE_NAME=poad/docker-jupyter:${{ matrix.versions.tag }} && \
+        chmod +x hooks/build && \
+        DOCKER_TAG=${{ matrix.versions.tag }} DOCKERFILE_PATH=$(pwd)/Dockerfile IMAGE_NAME=${{ matrix.versions.tag }} hooks/build . && \
+        docker push ${IMAGRE_NAME} && \
+        cd ${CUR}
