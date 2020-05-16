@@ -10,8 +10,6 @@ ARG SCALA_VERSION="2.12.8"
 ARG ALMOND_VERSION="0.9.1"
 ARG IERL_VERSION="0.4.0"
 
-ARG EVCXR_VERSION="0.4.6"
-
 ARG NODE_VERSION="lts"
 
 FROM alpine:3 AS downloader
@@ -23,8 +21,6 @@ ARG JAVA_URL
 
 ARG SBT_VERSION
 ARG IERL_VERSION
-
-ARG EVCXR_VERSION
 
 RUN apk --update add --no-cache --virtual .build-deps \
     curl \
@@ -41,8 +37,6 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && mv ${INSTALL_DIR}/${ZULU_DIR} ${JAVA_HOME} \
  && curl -sL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && cd /tmp \
- && curl -sL "https://github.com/google/evcxr/archive/v${EVCXR_VERSION}.tar.gz" | tar -xz -C /tmp \
- && mv /tmp/evcxr-${EVCXR_VERSION} /tmp/evcxr \
  && wget https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl
 
 
@@ -102,7 +96,6 @@ ARG MAN_DIR=/usr/share/man/man1
 COPY --from=downloader ${JAVA_HOME} ${JAVA_HOME}
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
 COPY --chown=1000:1000 assets/tmp/requirements.txt /tmp/requirements.txt
-COPY --chown=1000:1000 --from=downloader /tmp/evcxr /tmp/evcxr
 COPY --chown=1000:1000 --from=downloader /tmp/ierl /tmp/ierl 
 
 RUN apk --update add --no-cache --virtual .build-deps \
@@ -189,7 +182,6 @@ RUN jupyter notebook --generate-config --allow-root \
         -o almond && \
     ./almond --install
 
-WORKDIR /tmp/evcxr/evcxr_jupyter
 RUN cargo install evcxr_jupyter \
  && evcxr_jupyter --install
 

@@ -1,16 +1,3 @@
-ARG EVCXR_VERSION=0.4.6
-
-FROM buildpack-deps:stable-curl AS downloader
-
-ARG EVCXR_VERSION
-
-ARG URL="https://github.com/google/evcxr/archive/v${EVCXR_VERSION}.tar.gz"
-
-RUN echo ${URL} \
- && curl -sSLo /tmp/evcxr-${EVCXR_VERSION}.tar.gz ${URL} \
- && tar xf /tmp/evcxr-${EVCXR_VERSION}.tar.gz -C /tmp \
- && mv /tmp/evcxr-${EVCXR_VERSION} /tmp/evcxr
-
 FROM alpine:3
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
@@ -62,8 +49,6 @@ RUN apk --update add --no-cache --virtual  \
  && jupyter nbextension enable --py widgetsnbextension \
  && jupyter notebook --generate-config --allow-root
 
-COPY --chown=jupyter:jupyter --from=downloader /tmp/evcxr /home/jupyter/evcxr
-
 # Install Rust kernel
 USER ${USER_NAME}
 
@@ -72,7 +57,6 @@ ENV PATH ${PATH}:${USER_HOME}/.cargo/bin
 RUN  jupyter serverextension enable --py jupyterlab \
  && jupyter nbextension enable --py widgetsnbextension \
  && jupyter notebook --generate-config --allow-root \
- && cd evcxr/evcxr_jupyter \
  && cargo install evcxr_jupyter \
  && evcxr_jupyter --install
 
