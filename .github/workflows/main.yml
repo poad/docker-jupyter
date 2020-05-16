@@ -35,7 +35,7 @@ jobs:
         cd ${{ matrix.versions.dir }} && \
         IMAGRE_NAME=poad/docker-jupyter:${{ matrix.versions.tag }} && \
         chmod +x hooks/build && \
-        DOCKER_TAG=${{ matrix.versions.tag }} DOCKERFILE_PATH=$(pwd)/Dockerfile IMAGE_NAME=${{ matrix.versions.tag }} hooks/build . && \
+        DOCKER_TAG=${{ matrix.versions.tag }} DOCKERFILE_PATH=$(pwd)/Dockerfile IMAGE_NAME=${IMAGRE_NAME} hooks/build . && \
         cd ${CUR}
 
   docker_push:
@@ -63,6 +63,6 @@ jobs:
         cd ${{ matrix.versions.dir }} && \
         IMAGRE_NAME=poad/docker-jupyter:${{ matrix.versions.tag }} && \
         chmod +x hooks/build && \
-        DOCKER_TAG=${{ matrix.versions.tag }} DOCKERFILE_PATH=$(pwd)/Dockerfile IMAGE_NAME=${{ matrix.versions.tag }} hooks/build . && \
+        DOCKER_TAG=${{ matrix.versions.tag }} DOCKERFILE_PATH=$(pwd)/Dockerfile IMAGE_NAME=${IMAGRE_NAME} hooks/build . && \
         docker push ${IMAGRE_NAME} && \
         cd ${CUR}
