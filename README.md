@@ -15,11 +15,13 @@ docker pull poad/docker-jupyter:all-in-one-jdk8
 
 Jupyter notebook with follow kernels based JDK8
 
-- scala ([almond](https://almond.sh))
-- rust ([evcxr](https://github.com/google/evcxr/tree/master/evcxr_jupyter))
+- Scala ([almond](https://almond.sh))
+- Rust ([evcxr](https://github.com/google/evcxr/tree/master/evcxr_jupyter))
 - Erlang ([ierl](https://github.com/filmor/ierl))
 - Elixir ([ierl](https://github.com/filmor/ierl))
 - LFE ([ierl](https://github.com/filmor/ierl))
+- Node.js ([IJavascript](https://github.com/n-riesco/ijavascript))
+- TypeScript ([ITypescript](https://github.com/nearbydelta/itypescript))
 
 ## All in one based JDK11
 
@@ -34,6 +36,8 @@ Jupyter notebook with follow kernels based JDK11
 - Erlang ([ierl](https://github.com/filmor/ierl))
 - Elixir ([ierl](https://github.com/filmor/ierl))
 - LFE ([ierl](https://github.com/filmor/ierl))
+- Node.js ([IJavascript](https://github.com/n-riesco/ijavascript))
+- TypeScript ([ITypescript](https://github.com/nearbydelta/itypescript))
 
 ## Java
 
@@ -58,3 +62,19 @@ docker pull poad/docker-jupyter:scala
 ```
 
 Jupyter notebook with [almond](https://almond.sh)
+
+## Node.js
+
+```$sh
+docker pull poad/docker-jupyter:nodejs
+```
+
+Jupyter notebook with [IJavascript](https://github.com/n-riesco/ijavascript)
+
+## TypeScript
+
+```$sh
+docker pull poad/docker-jupyter:typescript
+```
+
+Jupyter notebook with TypeScript ([ITypescript](https://github.com/nearbydelta/itypescript))
