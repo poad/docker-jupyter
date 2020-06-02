@@ -37,7 +37,9 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && mv ${INSTALL_DIR}/${ZULU_DIR} ${JAVA_HOME} \
  && curl -sL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && cd /tmp \
- && wget https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl
+ && wget https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl \
+ && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
+
 
 
 FROM node:${NODE_VERSION}-alpine
@@ -97,6 +99,7 @@ COPY --from=downloader ${JAVA_HOME} ${JAVA_HOME}
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
 COPY --chown=1000:1000 assets/tmp/requirements.txt /tmp/requirements.txt
 COPY --chown=1000:1000 --from=downloader /tmp/ierl /tmp/ierl 
+COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
 RUN apk --update add --no-cache --virtual .build-deps \
     binutils-gold \
@@ -147,6 +150,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && mkdir -p ${MAN_DIR} \
  && cd ${MAN_DIR} \
  && find ${JAVA_HOME}/man/man1 -type f -name "*.1" -exec ln -s {} . \; \
+ && python3 /tmp/get-pip.py \
  && npm install -g configurable-http-proxy \
  && pip3 install -U setuptools pip \
  && pip install -r /tmp/requirements.txt \
@@ -161,7 +165,8 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && chmod u+x ierl \
  && ./ierl install elixir \
  && ./ierl install lfe \
- && ./ierl install erlang
+ && ./ierl install erlang \
+ && rm -rf /tmp/get-pip.py
 
 
 USER ${USER_NAME}
