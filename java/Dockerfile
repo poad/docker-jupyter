@@ -46,6 +46,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && rm -f ${ZULU_ARCH} \
  && mv ${INSTALL_DIR}/${ZULU_DIR} ${JAVA_HOME} \
  && wget https://github.com/SpencerPark/IJava/releases/download/v${IJAVA_VERSION}/ijava-${IJAVA_VERSION}.zip \
+ && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && mkdir ijava-${IJAVA_VERSION} \
  && unzip ijava-${IJAVA_VERSION}.zip -d ijava-${IJAVA_VERSION}
 
@@ -72,6 +73,8 @@ ENV LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8 \
     JAVA_HOME=${JAVA_HOME} \
     PATH=${USER_HOME}/.local/bin:${PATH}:${SBT_HOME}/bin:/${USER_HOME}/.cargo/bin:/usr/local/bin:¥${USER_HOME}/.mix/:${USER_HOME}/.ierl:${JAVA_HOME}/bin
+
+COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
 USER root
 
@@ -117,8 +120,9 @@ RUN apk --update add --no-cache --virtual ${BUILD_DEPS} \
  && mkdir -p ${MAN_DIR} \
  && cd ${MAN_DIR} \
  && find ${JAVA_HOME}/man/man1 -type f -name "*.1" -exec ln -s {} . \; \
- && pip3 install -U setuptools \
- && pip3 install -U pip
+ && python3 /tmp/get-pip.py \
+ && pip install -U setuptools \
+ && rm -rf /tmp/get-pip.py
 
 USER ${USER_NAME}
 

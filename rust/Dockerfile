@@ -1,3 +1,9 @@
+FROM alpine:3 AS downloader
+
+RUN apk --update add --no-cache \
+        curl \
+ && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
+
 FROM alpine:3
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
@@ -13,6 +19,7 @@ RUN addgroup -g 1000 -S ${USER_NAME} \
  && adduser -u 1000 -S  ${USER_NAME} -G ${USER_NAME}
 
 COPY requirements.txt /tmp/requirements.txt
+COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
 RUN apk --update add --no-cache --virtual  \
         curl \
@@ -43,18 +50,20 @@ RUN apk --update add --no-cache --virtual  \
         ca-certificates \
         unzip \
  && rm -rf /var/cache/apk/* \
- && pip3 install -U setuptools pip \
+ && python3 /tmp/get-pip.py \
+ && pip install -U setuptools \
  && pip install -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
- && jupyter notebook --generate-config --allow-root
+ && jupyter notebook --generate-config --allow-root \
+ && rm -rf /tmp/get-pip.py
 
 # Install Rust kernel
 USER ${USER_NAME}
 
 WORKDIR ${USER_HOME}
 ENV PATH ${PATH}:${USER_HOME}/.cargo/bin
-RUN  jupyter serverextension enable --py jupyterlab \
+RUN jupyter serverextension enable --py jupyterlab \
  && jupyter nbextension enable --py widgetsnbextension \
  && jupyter notebook --generate-config --allow-root \
  && cargo install evcxr_jupyter \

@@ -1,5 +1,11 @@
 ARG NODE_VERSION="lts"
 
+FROM alpine:3 AS downloader
+
+RUN apk --update add --no-cache \
+        curl \
+ && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
+
 FROM node:${NODE_VERSION}-alpine
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
@@ -11,6 +17,7 @@ ARG USER_NAME=node
 ARG USER_HOME=/home/${USER_NAME}
 
 COPY requirements.txt /tmp/requirements.txt
+COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
 RUN apk --update add --no-cache --virtual  \
         curl \
@@ -37,12 +44,14 @@ RUN apk --update add --no-cache --virtual  \
         ca-certificates \
         unzip \
  && rm -rf /var/cache/apk/* \
- && pip3 install -U setuptools pip \
+ && python3 /tmp/get-pip.py \
+ && pip install -U setuptools \
  && pip install -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
  && npm install -g --unsafe-perm ijavascript \
- && ijsinstall --install=global
+ && ijsinstall --install=global \
+ && rm -rf /tmp/get-pip.py
 
 USER ${USER_NAME}
 
