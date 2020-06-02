@@ -5,7 +5,7 @@ ARG ZULU_ARCH="zulu${ZULU_VERSION}-ca-jdk${JDK_VERSION}-linux_musl_x64.tar.gz"
 ARG JAVA_HOME="/usr/lib/jvm/zulu-11"
 ARG JAVA_URL="https://cdn.azul.com/zulu/bin/${ZULU_ARCH}"
 
-ARG SBT_VERSION="1.3.9"
+ARG SBT_VERSION="1.3.12"
 ARG SCALA_VERSION="2.12.8"
 ARG ALMOND_VERSION="0.9.1"
 ARG IERL_VERSION="0.4.0"
