@@ -17,8 +17,8 @@ docker build --build-arg BASE_TAG=${DOCKER_TAG} \
     --build-arg JDK_VERSION="11.0.7" \
     --build-arg SHA256SUM="0de7ac5afede2ddeda399f10c9f9df83f91c9b60481ecf304aa5785ed50f36ce" \
     --build-arg SBT_VERSION="1.3.12" \
-    --build-arg SCALA_VERSION="2.12.8" \
-    --build-arg ALMOND_VERSION="0.9.1" \
+    --build-arg SCALA_VERSION="2.13.2" \
+    --build-arg ALMOND_VERSION="0.10.0" \
     --build-arg IERL_VERSION="0.4.0" \
     --build-arg NODE_VERSION="lts" \
     ${DOCKERFILE_PATH_ARG} -t $IMAGE_NAME .
