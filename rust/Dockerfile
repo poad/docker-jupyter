@@ -11,7 +11,6 @@ LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
 
-ARG EVCXR_VERSION
 ARG USER_NAME=jupyter
 ARG USER_HOME=/home/${USER_NAME}
 
@@ -66,7 +65,7 @@ ENV PATH ${PATH}:${USER_HOME}/.cargo/bin
 RUN jupyter serverextension enable --py jupyterlab \
  && jupyter nbextension enable --py widgetsnbextension \
  && jupyter notebook --generate-config --allow-root \
- && cargo install evcxr_jupyter \
+ && cargo install evcxr_jupyter --no-default-features \
  && evcxr_jupyter --install
 
 RUN mkdir -p ${USER_HOME}/.jupyter
