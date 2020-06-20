@@ -1,3 +1,4 @@
+ARG ALPINE_VERSION="3.12"
 ARG ZULU_VERSION="11.39.15"
 ARG JDK_VERSION="11.0.7"
 ARG SHA256SUM="0de7ac5afede2ddeda399f10c9f9df83f91c9b60481ecf304aa5785ed50f36ce"
@@ -26,6 +27,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
     curl \
     gnupg \
     xz \
+    git \
  && rm -rf /var/cache/apk/* \
  && INSTALL_DIR=$( dirname ${JAVA_HOME} ) \
  && ZULU_DIR=$( basename ${ZULU_ARCH} .tar.gz ) \
@@ -41,7 +43,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
 
 
-FROM node:${NODE_VERSION}-alpine
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION}
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
@@ -186,7 +188,7 @@ RUN jupyter notebook --generate-config --allow-root \
         -o almond && \
     ./almond --install
 
-RUN cargo install evcxr_jupyter \
+RUN cargo install evcxr_jupyter --no-default-features \
  && evcxr_jupyter --install
 
 USER root

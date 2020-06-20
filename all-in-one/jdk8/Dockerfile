@@ -1,3 +1,4 @@
+ARG ALPINE_VERSION="3.12"
 ARG ZULU_VERSION="8.46.0.19"
 ARG JDK_VERSION="8.0.252"
 ARG SHA256SUM="306ec531eed55c119321dcd9ae7664a110d98955afc571d5d19ad6b69172a705"
@@ -42,7 +43,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
 
 
 
-FROM node:${NODE_VERSION}-alpine
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION}
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
@@ -187,7 +188,7 @@ RUN jupyter notebook --generate-config --allow-root \
         -o almond && \
     ./almond --install
 
-RUN cargo install evcxr_jupyter \
+RUN cargo install evcxr_jupyter --no-default-features \
  && evcxr_jupyter --install
 
 USER root
