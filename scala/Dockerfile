@@ -1,4 +1,4 @@
-ARG SBT_VERSION=1.3.12
+ARG SBT_VERSION=1.3.13
 ARG SCALA_VERSION=2.13.2
 ARG SBT_HOME=/usr/local/sbt
 ARG SCALA_HOME=/usr/local/scala
@@ -19,14 +19,14 @@ RUN apk --update add --no-cache --virtual .build-deps \
     gnupg \
     xz \
  && rm -rf /var/cache/apk/* \
- && curl -sL "https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.tgz" | tar -xz -C /usr/local \
+ && curl -sSL "https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.tgz"         | tar -xz -C /usr/local \
  && mv ${SCALA_HOME}-${SCALA_VERSION} ${SCALA_HOME} \
- && curl -sL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
+ && curl -sSL "https://sbt-downloads.cdnedge.bluemix.net/releases/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && git clone https://github.com/almond-sh/almond.git \
  && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 
 
-FROM poad/docker-openjdk:13
+FROM poad/docker-openjdk:14
 
 LABEL maintenar="Kenji Saito <ken-yo@mbr.nifty.com>"
 

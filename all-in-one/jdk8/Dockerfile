@@ -6,7 +6,7 @@ ARG ZULU_ARCH="zulu${ZULU_VERSION}-ca-jdk${JDK_VERSION}-linux_musl_x64.tar.gz"
 ARG JAVA_HOME="/usr/lib/jvm/zulu-11"
 ARG JAVA_URL="https://cdn.azul.com/zulu/bin/${ZULU_ARCH}"
 
-ARG SBT_VERSION="1.3.12"
+ARG SBT_VERSION="1.3.13"
 ARG SCALA_VERSION="2.13.2"
 ARG ALMOND_VERSION="0.10.0"
 ARG IERL_VERSION="0.4.0"
@@ -30,13 +30,13 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && rm -rf /var/cache/apk/* \
  && INSTALL_DIR=$( dirname ${JAVA_HOME} ) \
  && ZULU_DIR=$( basename ${ZULU_ARCH} .tar.gz ) \
- && curl -Lso ${ZULU_ARCH} ${JAVA_URL} \
+ && curl -sSLo ${ZULU_ARCH} ${JAVA_URL} \
  && mkdir -p ${INSTALL_DIR} \
  && echo "${SHA256SUM}  ${ZULU_ARCH}" | sha256sum -c - \
  && tar -xf ./${ZULU_ARCH} -C ${INSTALL_DIR} \
  && rm -f ${ZULU_ARCH} \
  && mv ${INSTALL_DIR}/${ZULU_DIR} ${JAVA_HOME} \
- && curl -sL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
+ && curl -sSL "https://sbt-downloads.cdnedge.bluemix.net/releases/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && cd /tmp \
  && wget https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
