@@ -2,7 +2,7 @@ ARG SBT_VERSION=1.3.13
 ARG SCALA_VERSION=2.13.3
 ARG SBT_HOME=/usr/local/sbt
 ARG SCALA_HOME=/usr/local/scala
-ARG ALMOND_VERSION=0.10.3
+ARG ALMOND_VERSION=0.10.4
 
 FROM alpine:latest AS downloader
 

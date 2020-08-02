@@ -1,7 +1,7 @@
-ARG ZULU_VERSION="11.39.15"
-ARG JAVA_VERSION="11.0.7"
-ARG SHA256SUM="0de7ac5afede2ddeda399f10c9f9df83f91c9b60481ecf304aa5785ed50f36ce"
-ARG ZULU_ARCH="zulu${ZULU_VERSION}-ca-jdk${JAVA_VERSION}-linux_musl_x64.tar.gz"
+ARG ZULU_VERSION="11.41.23"
+ARG JDK_VERSION="11.0.8"
+ARG SHA256SUM="bd54bb1690ff7cd88f8b50aa089cd2e55911a62a18b096f43f0cf36fb0caec30"
+ARG ZULU_ARCH="zulu${ZULU_VERSION}-ca-jdk${JDK_VERSION}-linux_musl_x64.tar.gz"
 ARG JAVA_HOME="/usr/lib/jvm/zulu-11"
 ARG IJAVA_VERSION="1.3.0"
 
@@ -12,7 +12,7 @@ ARG JAVA_VERSION
 ARG SHA256SUM
 ARG ZULU_ARCH
 ARG IJAVA_VERSION
-ARG JAVA_URL="https://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-ca-jdk${JAVA_VERSION}-linux_musl_x64.tar.gz"
+ARG JAVA_URL="https://cdn.azul.com/zulu/bin/${ZULU_ARCH}"
 
 ARG JAVA_HOME
 
