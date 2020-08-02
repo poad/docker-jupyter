@@ -14,12 +14,12 @@ DOCKER_CONTENT_TRUST=1
 
 docker build --build-arg BASE_TAG=${DOCKER_TAG} \
     --build-arg ALPINE_VERSION="3.12" \
-    --build-arg ZULU_VERSION="8.46.0.19" \
-    --build-arg JDK_VERSION="8.0.252" \
-    --build-arg SHA256SUM="306ec531eed55c119321dcd9ae7664a110d98955afc571d5d19ad6b69172a705" \
+    --build-arg ZULU_VERSION="8.48.0.53" \
+    --build-arg JDK_VERSION="8.0.265" \
+    --build-arg SHA256SUM="9aa6f4792973b22cd13cf457903f997d444b28f693700e2fc57ac3dd7bd53481" \
     --build-arg SBT_VERSION="1.3.13" \
     --build-arg SCALA_VERSION="2.13.3" \
-    --build-arg ALMOND_VERSION="0.10.3" \
+    --build-arg ALMOND_VERSION="0.10.4" \
     --build-arg IERL_VERSION="0.4.0" \
     --build-arg NODE_VERSION="lts" \
     ${DOCKERFILE_PATH_ARG} -t $IMAGE_NAME .
