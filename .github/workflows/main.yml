@@ -37,7 +37,11 @@ jobs:
         chmod +x hooks/build && \
         DOCKER_TAG=${{ matrix.versions.tag }} DOCKERFILE_PATH=$(pwd)/Dockerfile IMAGE_NAME=${IMAGRE_NAME} hooks/build . && \
         cd ${CUR}
-
+    - name: Hadolint
+      uses: brpaz/hadolint-action@master
+      with:
+        dockerfile: ${{ matrix.versions.dir }}/Dockerfile
+  
   docker_push:
     strategy:
       matrix:

@@ -36,19 +36,19 @@ ARG BUILD_DEPS="curl \
 RUN apk --update add --no-cache --virtual .build-deps \
     ${BUILD_DEPS} \
  && rm -rf /var/cache/apk/* \
- && INSTALL_DIR=$( dirname ${JAVA_HOME} ) \
- && ZULU_DIR=$( basename ${ZULU_ARCH} .tar.gz ) \
- && curl -Lso ${ZULU_ARCH} ${JAVA_URL} \
- && mkdir -p ${INSTALL_DIR} \
+ && INSTALL_DIR=$( dirname "${JAVA_HOME}" ) \
+ && ZULU_DIR=$( basename "${ZULU_ARCH}" .tar.gz ) \
+ && curl -Lso "${ZULU_ARCH}" "${JAVA_URL}" \
+ && mkdir -p "${INSTALL_DIR}" \
  && echo "${JAVA_URL}" \
  && echo "${SHA256SUM}  ${ZULU_ARCH}" | sha256sum -c - \
- && tar -xf ./${ZULU_ARCH} -C ${INSTALL_DIR} \
+ && tar -xf ./"${ZULU_ARCH}" -C ${INSTALL_DIR} \
  && rm -f ${ZULU_ARCH} \
- && mv ${INSTALL_DIR}/${ZULU_DIR} ${JAVA_HOME} \
- && wget https://github.com/SpencerPark/IJava/releases/download/v${IJAVA_VERSION}/ijava-${IJAVA_VERSION}.zip \
+ && mv "${INSTALL_DIR}"/"${ZULU_DIR}" "${JAVA_HOME}" \
+ && curl -sSLo "ijava-${IJAVA_VERSION}.zip" "https://github.com/SpencerPark/IJava/releases/download/v${IJAVA_VERSION}/ijava-${IJAVA_VERSION}.zip" \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
- && mkdir ijava-${IJAVA_VERSION} \
- && unzip ijava-${IJAVA_VERSION}.zip -d ijava-${IJAVA_VERSION}
+ && mkdir "ijava-${IJAVA_VERSION}" \
+ && unzip "ijava-${IJAVA_VERSION}.zip" -d "ijava-${IJAVA_VERSION}"
 
 FROM alpine:3
 
@@ -115,11 +115,11 @@ COPY --chown=1000:1000 requirements.txt /tmp/requirements.txt
 
 RUN apk --update add --no-cache --virtual ${BUILD_DEPS} \
  && rm -rf /var/cache/apk/* \
- && cd ${BIN_DIR} \
- && find ${JAVA_HOME}/bin -type f -perm -a=x -exec ln -s {} . \; \
+ && cd "${BIN_DIR}" \
+ && find "${JAVA_HOME}/bin" -type f -perm -a=x -exec ln -s {} . \; \
  && mkdir -p ${MAN_DIR} \
- && cd ${MAN_DIR} \
- && find ${JAVA_HOME}/man/man1 -type f -name "*.1" -exec ln -s {} . \; \
+ && cd "${MAN_DIR}" \
+ && find "${JAVA_HOME}/man/man1" -type f -name "*.1" -exec ln -s {} . \; \
  && python3 /tmp/get-pip.py \
  && pip install -U setuptools \
  && rm -rf /tmp/get-pip.py
@@ -134,10 +134,10 @@ RUN pip install --user -r /tmp/requirements.txt \
  && jupyter notebook --generate-config --allow-root \
  && rm -f /tmp/requirements.txt \
  && mkdir -p ${USER_HOME}/IJava \
- && cd ${USER_HOME}/IJava/ \
+ && cd "${USER_HOME}/IJava/" \
  && python3 install.py --user \
  && rm -rf /tmp/requirements.txt \
- && mkdir -p ${USER_HOME}/notebooks
+ && mkdir -p "${USER_HOME}/notebooks"
 
 COPY jupyter_notebook_config.py ${USER_HOME}/.jupyter/jupyter_notebook_config.py
 
