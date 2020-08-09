@@ -38,8 +38,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && rm -f ${ZULU_ARCH} \
  && mv ${INSTALL_DIR}/${ZULU_DIR} ${JAVA_HOME} \
  && curl -sSL "https://sbt-downloads.cdnedge.bluemix.net/releases/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
- && cd /tmp \
- && wget https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl \
+ && curl -sSLo /tmp/ierl https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
 
 
