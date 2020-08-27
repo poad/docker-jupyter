@@ -19,7 +19,7 @@ docker build --build-arg BASE_TAG=${DOCKER_TAG} \
     --build-arg SHA256SUM="9aa6f4792973b22cd13cf457903f997d444b28f693700e2fc57ac3dd7bd53481" \
     --build-arg SBT_VERSION="1.3.13" \
     --build-arg SCALA_VERSION="2.13.3" \
-    --build-arg ALMOND_VERSION="0.10.5" \
+    --build-arg ALMOND_VERSION="0.10.6" \
     --build-arg IERL_VERSION="0.4.0" \
     --build-arg NODE_VERSION="lts" \
     ${DOCKERFILE_PATH_ARG} -t $IMAGE_NAME .
