@@ -38,6 +38,7 @@ jobs:
         DOCKER_TAG=${{ matrix.versions.tag }} DOCKERFILE_PATH=$(pwd)/Dockerfile IMAGE_NAME=${IMAGRE_NAME} hooks/build . && \
         cd ${CUR}
     - name: Hadolint
+      if: github.event_name == 'pull_request' && github.event_name != 'schedule'
       uses: brpaz/hadolint-action@master
       with:
         dockerfile: ${{ matrix.versions.dir }}/Dockerfile
