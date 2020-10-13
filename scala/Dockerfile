@@ -1,4 +1,4 @@
-ARG SBT_VERSION=1.3.13
+ARG SBT_VERSION=1.4.0
 ARG SCALA_VERSION=2.13.3
 ARG SBT_HOME=/usr/local/sbt
 ARG SCALA_HOME=/usr/local/scala
@@ -21,7 +21,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && rm -rf /var/cache/apk/* \
  && curl -sSL "https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.tgz"         | tar -xz -C /usr/local \
  && mv ${SCALA_HOME}-${SCALA_VERSION} ${SCALA_HOME} \
- && curl -sSL "https://sbt-downloads.cdnedge.bluemix.net/releases/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
+ && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && git clone https://github.com/almond-sh/almond.git \
  && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 
