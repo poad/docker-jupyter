@@ -14,9 +14,9 @@ DOCKER_CONTENT_TRUST=1
 
 docker build --build-arg BASE_TAG=${DOCKER_TAG} \
     --build-arg ALPINE_VERSION="3.12" \
-    --build-arg ZULU_VERSION="8.48.0.53" \
-    --build-arg JDK_VERSION="8.0.265" \
-    --build-arg SHA256SUM="9aa6f4792973b22cd13cf457903f997d444b28f693700e2fc57ac3dd7bd53481" \
+    --build-arg ZULU_VERSION="8.50.0.21" \
+    --build-arg JDK_VERSION="8.0.272" \
+    --build-arg SHA256SUM="796965db6a735b786d836d390061f32640e247891c4f68a3ce5e02e4784869d4" \
     --build-arg SBT_VERSION="1.4.1" \
     --build-arg SCALA_VERSION="2.13.3" \
     --build-arg ALMOND_VERSION="0.10.9" \

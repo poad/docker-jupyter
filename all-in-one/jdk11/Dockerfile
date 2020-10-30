@@ -1,7 +1,7 @@
 ARG ALPINE_VERSION="3.12"
-ARG ZULU_VERSION="11.41.23"
-ARG JDK_VERSION="11.0.8"
-ARG SHA256SUM="bd54bb1690ff7cd88f8b50aa089cd2e55911a62a18b096f43f0cf36fb0caec30"
+ARG ZULU_VERSION="11.43.21"
+ARG JDK_VERSION="11.0.9"
+ARG SHA256SUM="48824903612a01464750fcae9d059ebeb7fd4c3a3a7a53e28ff40bb5679d5ab0"
 ARG ZULU_ARCH="zulu${ZULU_VERSION}-ca-jdk${JDK_VERSION}-linux_musl_x64.tar.gz"
 ARG JAVA_HOME="/usr/lib/jvm/zulu-11"
 ARG JAVA_URL="https://cdn.azul.com/zulu/bin/${ZULU_ARCH}"
@@ -156,10 +156,6 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && pip install -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
- && npm install -g --unsafe-perm itypescript \
- && its --install=global \
- && npm install -g --unsafe-perm ijavascript \
- && ijsinstall --install=global \
  && rm -f /tmp/requirements.txt \
  && cd /tmp \
  && chmod u+x ierl \

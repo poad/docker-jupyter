@@ -26,7 +26,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 
 
-FROM poad/docker-openjdk:14
+FROM poad/docker-openjdk:15
 
 LABEL maintenar="Kenji Saito <ken-yo@mbr.nifty.com>"
 
