@@ -156,10 +156,6 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && pip install -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
- && npm install -g --unsafe-perm itypescript \
- && its --install=global \
- && npm install -g --unsafe-perm ijavascript \
- && ijsinstall --install=global \
  && rm -f /tmp/requirements.txt \
  && cd /tmp \
  && chmod u+x ierl \

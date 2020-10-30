@@ -21,8 +21,7 @@ jobs:
           { dir: 'rust', tag: 'rust' },
           { dir: 'java', tag: 'java' },
           { dir: 'scala', tag: 'scala' },
-          { dir: 'nodejs', tag: 'nodejs' },
-          { dir: 'typescript', tag: 'typescript' }
+          { dir: 'nodejs', tag: 'nodejs' }
         ]    
     runs-on: ubuntu-latest
     steps:
@@ -53,8 +52,7 @@ jobs:
           { dir: 'rust', tag: 'rust' },
           { dir: 'java', tag: 'java' },
           { dir: 'scala', tag: 'scala' },
-          { dir: 'nodejs', tag: 'nodejs' },
-          { dir: 'typescript', tag: 'typescript' }
+          { dir: 'nodejs', tag: 'nodejs' }
         ]    
     runs-on: ubuntu-latest
     steps:
