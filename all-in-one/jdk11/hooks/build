@@ -13,15 +13,15 @@ fi
 DOCKER_CONTENT_TRUST=1
 
 docker build --build-arg BASE_TAG=${DOCKER_TAG} \
-    --build-arg ALPINE_VERSION="3.12" \
-    --build-arg ZULU_VERSION="11.43.21" \
-    --build-arg JDK_VERSION="11.0.9" \
-    --build-arg SHA256SUM="48824903612a01464750fcae9d059ebeb7fd4c3a3a7a53e28ff40bb5679d5ab0" \
-    --build-arg SBT_VERSION="1.4.1" \
+    --build-arg UBUNTU_CODENAME="focal" \
+    --build-arg JDK_VERSION="11.0.9.1" \
+    --build-arg ESUM="6c79bfe8bb06c82b72ef2f293a14becef56b3078d298dc75fda4225cbb2d3d0c" \
+    --build-arg ZULU_VERSION="11.43.55" \
+    --build-arg SBT_VERSION="1.4.3" \
     --build-arg SCALA_VERSION="2.13.3" \
     --build-arg ALMOND_VERSION="0.10.9" \
     --build-arg IERL_VERSION="0.4.0" \
-    --build-arg NODE_VERSION="lts" \
+    --build-arg NODE_VERSION="14.x" \
     ${DOCKERFILE_PATH_ARG} -t $IMAGE_NAME .
 
 echo "------ HOOK END - BUILD -------"
