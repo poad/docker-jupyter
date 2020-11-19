@@ -39,7 +39,8 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && mv ${INSTALL_DIR}/${ZULU_DIR} ${JAVA_HOME} \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && curl -sSLo /tmp/ierl https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl \
- && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
+ && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
+ && curl --proto '=https' --tlsv1.2 -sSfo /tmp/rust_setup.sh https://sh.rustup.rs
 
 
 FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION}
