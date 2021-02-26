@@ -1,12 +1,10 @@
-ARG NODE_VERSION="lts"
-
 FROM alpine:3 AS downloader
 
 RUN apk --update add --no-cache \
         curl \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
 
-FROM node:${NODE_VERSION}-alpine
+FROM alpine:3
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
@@ -19,31 +17,40 @@ ARG USER_HOME=/home/${USER_NAME}
 COPY requirements.txt /tmp/requirements.txt
 COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
-RUN apk --update add --no-cache --virtual  \
+RUN apk --update add --no-cache --virtual \
+        build-base \
+        bash \
+        ca-certificates \
+        cargo \
+        cmake \
         curl \
+        czmq-dev \
+        freetype-dev \
+        gcc \
+        g++ \
+        git \
         gnupg \
         libssl1.1 \
-        python3 \
-        python3-dev \
         libzmq \
-        czmq-dev \
-        py3-pyzmq \
-        git \
         libffi-dev \
-        openssl-dev \
         libxml2-dev \
         libxslt-dev \
-        cmake \
-        build-base \
-        zlib \
-        bash \
-        m4 \
-        rsync \
-        freetype-dev \
         libpng-dev \
-        ca-certificates \
+        m4 \
+        make \
+        musl-dev \
+        npm \
+        nodejs \
+        openssl-dev \
+        py3-pyzmq \
+        python3 \
+        python3-dev \
+        rsync \
         unzip \
- && rm -rf /var/cache/apk/* \
+        zlib \
+ && rm -rf /var/cache/apk/*
+RUN npm i -g n yarn \
+ && n lts \
  && python3 /tmp/get-pip.py \
  && pip install -U setuptools \
  && pip install -r /tmp/requirements.txt \

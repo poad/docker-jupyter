@@ -1,8 +1,9 @@
-ARG SBT_VERSION=1.4.1
-ARG SCALA_VERSION=2.13.3
+ARG SBT_VERSION=1.4.7
+ARG SCALA_VERSION=2.13.4
 ARG SBT_HOME=/usr/local/sbt
 ARG SCALA_HOME=/usr/local/scala
-ARG ALMOND_VERSION=0.10.9
+ARG ALMOND_VERSION=0.11.0
+ARG JAVA_VERSION=15
 
 FROM alpine:3 AS downloader
 
@@ -26,7 +27,9 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 
 
-FROM poad/docker-openjdk:15
+FROM mcr.microsoft.com/java/jdk:${JAVA_VERSION}-zulu-ubuntu AS JDK
+
+FROM ubuntu:focal
 
 LABEL maintenar="Kenji Saito <ken-yo@mbr.nifty.com>"
 
@@ -48,6 +51,35 @@ ARG SBT_HOME
 ARG SCALA_HOME
 ARG SCALA_VERSION
 ARG ALMOND_VERSION
+
+ARG JAVA_VERSION
+
+ARG JAVA_HOME_DIR=java-${JAVA_VERSION}-openjdk-amd64
+
+ENV JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64
+
+ARG basedir=${JAVA_HOME}
+ARG mandir=${basedir}/man
+
+COPY --from=JDK /usr/lib/jvm/zulu-${JAVA_VERSION}-azure-amd64 ${JAVA_HOME}
+RUN set -ex; \
+	\
+# deal with slim variants not having man page directories (which causes "update-alternatives" to fail)
+	if [ ! -d /usr/share/man/man1 ]; then \
+		mkdir -p /usr/share/man/man1; \
+	fi; \
+	\
+    mkdir -p /usr/lib/jvm/; \
+    for i in $(ls "${basedir}/bin"); do \
+        update-alternatives --install "/usr/bin/${i}" "${i}" "$basedir/bin/${i}" 1100; \
+    done \
+ && \
+# update-alternatives so that future installs of other OpenJDK versions don't change /usr/bin/java
+    update-alternatives --get-selections | awk -v home="$(readlink -f "${JAVA_HOME}")" 'index($3, home) == 1 { $2 = "manual"; print | "update-alternatives --set-selections" }'; \
+# ... and verify that it actually worked for one of the alternatives we care about
+	update-alternatives --query java | grep -q 'Status: manual'
+
+ENV PATH ${JAVA_HOME}/bin:${PATH}
 
 COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
@@ -93,6 +125,9 @@ RUN apt-get update  -qq \
  && apt-get -qqy autoremove --purge ${DEPENDENCIES} \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* /tmp/*
+
+RUN groupadd -g 1000 java \
+ && useradd -g 1000 -l -m -s /bin/false -u 1000 java
 
 USER java
 

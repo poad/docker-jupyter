@@ -1,20 +1,12 @@
-ARG ZULU_VERSION="11.43.21"
-ARG JDK_VERSION="11.0.9"
-ARG SHA256SUM="48824903612a01464750fcae9d059ebeb7fd4c3a3a7a53e28ff40bb5679d5ab0"
-ARG ZULU_ARCH="zulu${ZULU_VERSION}-ca-jdk${JDK_VERSION}-linux_musl_x64.tar.gz"
-ARG JAVA_HOME="/usr/lib/jvm/zulu-11"
+ARG TEMP_JDK_DIR=/tmp/jdk
 ARG IJAVA_VERSION="1.3.0"
+ARG JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
-FROM alpine:latest as downloader
+FROM mcr.microsoft.com/java/jdk:11-zulu-alpine as downloader
 
-ARG ZULU_VERSION
-ARG JAVA_VERSION
-ARG SHA256SUM
-ARG ZULU_ARCH
 ARG IJAVA_VERSION
-ARG JAVA_URL="https://cdn.azul.com/zulu/bin/${ZULU_ARCH}"
 
-ARG JAVA_HOME
+ARG TEMP_JDK_DIR
 
 WORKDIR /tmp
 
@@ -36,15 +28,8 @@ ARG BUILD_DEPS="curl \
 RUN apk --update add --no-cache --virtual .build-deps \
     ${BUILD_DEPS} \
  && rm -rf /var/cache/apk/* \
- && INSTALL_DIR=$( dirname "${JAVA_HOME}" ) \
- && ZULU_DIR=$( basename "${ZULU_ARCH}" .tar.gz ) \
- && curl -Lso "${ZULU_ARCH}" "${JAVA_URL}" \
- && mkdir -p "${INSTALL_DIR}" \
- && echo "${JAVA_URL}" \
- && echo "${SHA256SUM}  ${ZULU_ARCH}" | sha256sum -c - \
- && tar -xf ./"${ZULU_ARCH}" -C ${INSTALL_DIR} \
- && rm -f ${ZULU_ARCH} \
- && mv "${INSTALL_DIR}"/"${ZULU_DIR}" "${JAVA_HOME}" \
+ && ZULU_PATH=$(ls -d /usr/lib/jvm/zulu-*) \
+ && mv "${ZULU_PATH}" "${TEMP_JDK_DIR}" \
  && curl -sSLo "ijava-${IJAVA_VERSION}.zip" "https://github.com/SpencerPark/IJava/releases/download/v${IJAVA_VERSION}/ijava-${IJAVA_VERSION}.zip" \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && mkdir "ijava-${IJAVA_VERSION}" \
@@ -54,64 +39,62 @@ FROM alpine:3
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
-ARG JAVA_HOME
+ARG TEMP_JDK_DIR
 ARG USER_NAME=jupyter
 ARG USER_HOME=/home/${USER_NAME}
 ARG IJAVA_VERSION
+ARG JAVA_HOME
 
 ENV LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8 \
-    JAVA_HOME=${JAVA_HOME} \
     PATH=/root/.local/bin:${PATH}:${JAVA_HOME}/bin
-
-RUN addgroup -g 1000 -S ${USER_NAME} \
- && adduser -u 1000 -S  ${USER_NAME} -G ${USER_NAME}
-
-USER ${USER_NAME}
-
-ENV LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8 \
-    JAVA_HOME=${JAVA_HOME} \
-    PATH=${USER_HOME}/.local/bin:${PATH}:${SBT_HOME}/bin:/${USER_HOME}/.cargo/bin:/usr/local/bin:¥${USER_HOME}/.mix/:${USER_HOME}/.ierl:${JAVA_HOME}/bin
 
 COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
 USER root
 
-WORKDIR /tmp
+COPY --from=downloader ${TEMP_JDK_DIR} ${TEMP_JDK_DIR}
+
+RUN JAVA_VERSION=$(cat "${TEMP_JDK_DIR}/release" | grep JAVA_VERSION= | cut -d "\"" -f2) \
+ && mkdir -p /usr/lib/jvm/ \
+ && cp -pR "${TEMP_JDK_DIR}" "/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64" \
+ && ln -s "/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64" "${JAVA_HOME}" \
+ && rm -rf "${TEMP_JDK_DIR}"
 
 ARG BIN_DIR=/usr/bin
 ARG MAN_DIR=/usr/share/man/man1
 
-ARG BUILD_DEPS="curl \
+ARG BUILD_DEPS=" \
+        alpine-sdk \
+        bash \
+        build-base \
+        cargo \
+        cmake \
+        curl \
+        czmq-dev \
+        diffutils \
+        freetype-dev \
         gnupg \
+        git \
+        libffi-dev \
+        libpng-dev \
         libssl1.1 \
+        libxml2-dev \
+        libxslt-dev \
+        libzmq \
+        m4 \
+        openssl-dev \
         python3 \
         python3-dev \
         py-setuptools \
-        libzmq \
-        czmq-dev \
         py3-pyzmq \
-        git \
-        libffi-dev \
-        openssl-dev \
-        cmake \
-        build-base \
-        zlib \
-        bash \
-        m4 \
         rsync \
-        freetype-dev \
-        libpng-dev \
-        alpine-sdk \
-        diffutils \
-        libxml2-dev \
-        libxslt-dev \
+        rust \
         wget \
-        xz"
+        xz \
+        zlib"
 
-COPY --from=downloader ${JAVA_HOME} ${JAVA_HOME}
-COPY --chown=1000:1000 requirements.txt /tmp/requirements.txt
+WORKDIR /tmp
 
 RUN apk --update add --no-cache --virtual ${BUILD_DEPS} \
  && rm -rf /var/cache/apk/* \
@@ -124,11 +107,19 @@ RUN apk --update add --no-cache --virtual ${BUILD_DEPS} \
  && pip install -U setuptools \
  && rm -rf /tmp/get-pip.py
 
+RUN addgroup -g 1000 -S ${USER_NAME} \
+ && adduser -u 1000 -S  ${USER_NAME} -G ${USER_NAME}
+
 USER ${USER_NAME}
 
+ENV LANGUAGE=en_US:en \
+    PATH=${USER_HOME}/.local/bin:${PATH}:${SBT_HOME}/bin:/${USER_HOME}/.cargo/bin:/usr/local/bin:${USER_HOME}/.mix/:${USER_HOME}/.ierl:${JAVA_HOME}/bin \
+    JAVA_HOME=${JAVA_HOME}
+COPY --chown=1000:1000 requirements.txt /tmp/requirements.txt
 COPY --chown=1000:1000 --from=downloader /tmp/ijava-${IJAVA_VERSION} ${USER_HOME}/IJava
 
-RUN pip install --user -r /tmp/requirements.txt \
+RUN pip install --user -U pip setuptools \
+ && pip install --user -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab \
  && jupyter nbextension enable --py widgetsnbextension \
  && jupyter notebook --generate-config --allow-root \
