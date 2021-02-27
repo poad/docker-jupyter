@@ -24,7 +24,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && mv ${SCALA_HOME}-${SCALA_VERSION} ${SCALA_HOME} \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && git clone https://github.com/almond-sh/almond.git \
- && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ && curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 
 
 FROM mcr.microsoft.com/java/jdk:${JAVA_VERSION}-zulu-ubuntu AS JDK
@@ -70,7 +70,8 @@ RUN set -ex; \
 	fi; \
 	\
     mkdir -p /usr/lib/jvm/; \
-    for i in $(ls "${basedir}/bin"); do \
+    cd "${basedir}/bin"; \
+    for i in *; do \
         update-alternatives --install "/usr/bin/${i}" "${i}" "$basedir/bin/${i}" 1100; \
     done \
  && \

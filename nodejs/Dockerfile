@@ -14,6 +14,10 @@ ENV LANG C.UTF-8
 ARG USER_NAME=node
 ARG USER_HOME=/home/${USER_NAME}
 
+RUN addgroup -g 1000 -S "${USER_NAME}" \
+ && adduser -u 1000 -S  "${USER_NAME}" -G "${USER_NAME}"
+
+
 COPY requirements.txt /tmp/requirements.txt
 COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
