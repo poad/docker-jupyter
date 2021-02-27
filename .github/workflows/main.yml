@@ -3,10 +3,10 @@ name: Docker build and push
 on:
   push:
     branches:
-    - master 
+    - main 
   pull_request:
     branches:
-      - master
+      - main
   schedule:
     - cron:  '15 0 * * 6'
 

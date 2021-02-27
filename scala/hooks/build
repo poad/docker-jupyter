@@ -13,9 +13,9 @@ fi
 DOCKER_CONTENT_TRUST=1
 
 docker build --build-arg BASE_TAG=${DOCKER_TAG} \
-    --build-arg SBT_VERSION="1.4.1" \
-    --build-arg SCALA_VERSION="2.13.3" \
-    --build-arg ALMOND_VERSION="0.10.9" \
+    --build-arg SBT_VERSION="1.4.7" \
+    --build-arg SCALA_VERSION="2.13.4" \
+    --build-arg ALMOND_VERSION="0.11.0" \
     ${DOCKERFILE_PATH_ARG} -t $IMAGE_NAME .
 
 echo "------ HOOK END - BUILD -------"
