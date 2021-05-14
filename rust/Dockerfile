@@ -1,3 +1,5 @@
+ARG LLVM_VERSION=12
+
 FROM alpine:3 AS downloader
 
 RUN apk --update add --no-cache \
@@ -11,6 +13,8 @@ LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
+
+ARG LLVM_VERSION
 
 ARG USER_NAME=jupyter
 ARG USER_HOME=/home/${USER_NAME}
@@ -31,8 +35,8 @@ ARG DEPENDENCIES="\
         file \
         gcc \
         git \
-        clang-11 \
-        lld-11 \
+        clang-${LLVM_VERSION} \
+        lld-${LLVM_VERSION} \
         imagemagick \
         libbz2-dev \
         libc6-dev \
@@ -75,7 +79,7 @@ ARG DEPENDENCIES="\
 RUN apt-get update -qq \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && curl -sL https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
- && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
  && add-apt-repository ppa:git-core/ppa -y \
  && add-apt-repository ppa:deadsnakes/ppa -y \
  && apt-get update -qq \
@@ -83,8 +87,8 @@ RUN apt-get update -qq \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && python3 /tmp/get-pip.py \
- && pip install -U setuptools \
- && pip install -r /tmp/requirements.txt \
+ && pip install --no-cache-dir -U setuptools \
+ && pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
  && jupyter notebook --generate-config --allow-root \
@@ -102,9 +106,8 @@ RUN chmod +x /tmp/rust_setup.sh \
  && jupyter nbextension enable --py widgetsnbextension \
  && jupyter notebook --generate-config --allow-root \
  && cargo install evcxr_jupyter --no-default-features \
- && evcxr_jupyter --install
-
-RUN mkdir -p ${USER_HOME}/.jupyter
+ && evcxr_jupyter --install \
+ && mkdir -p ${USER_HOME}/.jupyter
 
 ADD jupyter_notebook_config.py ${USER_HOME}/.jupyter/jupyter_notebook_config.py
 
