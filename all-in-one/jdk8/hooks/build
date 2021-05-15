@@ -14,12 +14,12 @@ DOCKER_CONTENT_TRUST=1
 
 docker build --build-arg BASE_TAG=${DOCKER_TAG} \
     --build-arg UBUNTU_CODENAME="focal" \
-    --build-arg ZULU_VERSION="8.50.0.51" \
-    --build-arg JDK_VERSION="8.0.275" \
-    --build-arg SHA256SUM="1db6b2fa642950ee1b4b1ec2b6bc8a9113d7a4cd723f79398e1ada7dab1c981c" \
-    --build-arg SBT_VERSION="1.4.3" \
-    --build-arg SCALA_VERSION="2.13.3" \
-    --build-arg ALMOND_VERSION="0.10.9" \
+    --build-arg ZULU_VERSION="8.54.0.21" \
+    --build-arg JDK_VERSION="8.0.292" \
+    --build-arg SHA256SUM="1a15b84a4d9dfb44a22c0335b36e4c1d9c860a0fa3aaa92f023543deaca25c10" \
+    --build-arg SBT_VERSION="1.5.2" \
+    --build-arg SCALA_VERSION="2.13.5" \
+    --build-arg ALMOND_VERSION="0.11.1" \
     --build-arg IERL_VERSION="0.4.0" \
     --build-arg NODE_VERSION="14.x" \
     ${DOCKERFILE_PATH_ARG} -t $IMAGE_NAME .

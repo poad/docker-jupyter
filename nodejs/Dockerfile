@@ -52,12 +52,12 @@ RUN apk --update add --no-cache --virtual \
         rsync \
         unzip \
         zlib \
- && rm -rf /var/cache/apk/*
-RUN npm i -g n yarn \
+ && rm -rf /var/cache/apk/* \
+ && npm i -g n yarn \
  && n lts \
  && python3 /tmp/get-pip.py \
- && pip install -U setuptools \
- && pip install -r /tmp/requirements.txt \
+ && pip install --no-cache-dir -U setuptools \
+ && pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
  && npm install -g --unsafe-perm ijavascript \
@@ -68,9 +68,8 @@ USER ${USER_NAME}
 
 WORKDIR ${USER_HOME}
 
-RUN jupyter notebook --generate-config --allow-root
-
-RUN mkdir -p ${USER_HOME}/.jupyter
+RUN jupyter notebook --generate-config --allow-root \
+ && mkdir -p ${USER_HOME}/.jupyter
 
 ADD jupyter_notebook_config.py ${USER_HOME}/.jupyter/jupyter_notebook_config.py
 

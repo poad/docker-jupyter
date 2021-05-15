@@ -55,11 +55,6 @@ USER root
 
 COPY --from=downloader ${TEMP_JDK_DIR} ${TEMP_JDK_DIR}
 
-RUN JAVA_VERSION=$(cat "${TEMP_JDK_DIR}/release" | grep JAVA_VERSION= | cut -d "\"" -f2) \
- && mkdir -p /usr/lib/jvm/ \
- && cp -pR "${TEMP_JDK_DIR}" "/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64" \
- && ln -s "/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64" "${JAVA_HOME}" \
- && rm -rf "${TEMP_JDK_DIR}"
 
 ARG BIN_DIR=/usr/bin
 ARG MAN_DIR=/usr/share/man/man1
@@ -96,7 +91,12 @@ ARG BUILD_DEPS=" \
 
 WORKDIR /tmp
 
-RUN apk --update add --no-cache --virtual ${BUILD_DEPS} \
+RUN JAVA_VERSION=$(cat "${TEMP_JDK_DIR}/release" | grep JAVA_VERSION= | cut -d "\"" -f2) \
+ && mkdir -p /usr/lib/jvm/ \
+ && cp -pR "${TEMP_JDK_DIR}" "/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64" \
+ && ln -s "/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64" "${JAVA_HOME}" \
+ && rm -rf "${TEMP_JDK_DIR}" \
+ && apk --update add --no-cache --virtual ${BUILD_DEPS} \
  && rm -rf /var/cache/apk/* \
  && cd "${BIN_DIR}" \
  && find "${JAVA_HOME}/bin" -type f -perm -a=x -exec ln -s {} . \; \
@@ -104,10 +104,9 @@ RUN apk --update add --no-cache --virtual ${BUILD_DEPS} \
  && cd "${MAN_DIR}" \
  && find "${JAVA_HOME}/man/man1" -type f -name "*.1" -exec ln -s {} . \; \
  && python3 /tmp/get-pip.py \
- && pip install -U setuptools \
- && rm -rf /tmp/get-pip.py
-
-RUN addgroup -g 1000 -S ${USER_NAME} \
+ && pip install --no-cache-dir -U setuptools \
+ && rm -rf /tmp/get-pip.py \
+ && addgroup -g 1000 -S ${USER_NAME} \
  && adduser -u 1000 -S  ${USER_NAME} -G ${USER_NAME}
 
 USER ${USER_NAME}
@@ -118,8 +117,8 @@ ENV LANGUAGE=en_US:en \
 COPY --chown=1000:1000 requirements.txt /tmp/requirements.txt
 COPY --chown=1000:1000 --from=downloader /tmp/ijava-${IJAVA_VERSION} ${USER_HOME}/IJava
 
-RUN pip install --user -U pip setuptools \
- && pip install --user -r /tmp/requirements.txt \
+RUN pip install --no-cache-dir --user -U pip setuptools \
+ && pip install --no-cache-dir --user -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab \
  && jupyter nbextension enable --py widgetsnbextension \
  && jupyter notebook --generate-config --allow-root \

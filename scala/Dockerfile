@@ -1,9 +1,9 @@
-ARG SBT_VERSION=1.4.7
-ARG SCALA_VERSION=2.13.4
+ARG JAVA_VERSION=8
+ARG SBT_VERSION=1.5.2
+ARG SCALA_VERSION="2.13.5"
 ARG SBT_HOME=/usr/local/sbt
 ARG SCALA_HOME=/usr/local/scala
-ARG ALMOND_VERSION=0.11.0
-ARG JAVA_VERSION=15
+ARG ALMOND_VERSION="0.11.1"
 
 FROM alpine:3 AS downloader
 
@@ -20,11 +20,11 @@ RUN apk --update add --no-cache --virtual .build-deps \
     gnupg \
     xz \
  && rm -rf /var/cache/apk/* \
- && curl -sSL "https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.tgz"         | tar -xz -C /usr/local \
+ && curl -sSL "https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.tgz" | tar -xz -C /usr/local \
  && mv ${SCALA_HOME}-${SCALA_VERSION} ${SCALA_HOME} \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
- && git clone https://github.com/almond-sh/almond.git \
- && curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ && curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
+ && curl -fLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux
 
 
 FROM mcr.microsoft.com/java/jdk:${JAVA_VERSION}-zulu-ubuntu AS JDK
@@ -46,10 +46,8 @@ ARG DEPENDENCIES="\
      python3-distutils \
      ca-certificates"
 
-# Install sbt and almond
 ARG SBT_HOME
 ARG SCALA_HOME
-ARG SCALA_VERSION
 ARG ALMOND_VERSION
 
 ARG JAVA_VERSION
@@ -85,7 +83,7 @@ ENV PATH ${JAVA_HOME}/bin:${PATH}
 COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
 # Install Python and Jupyter
-RUN apt-get update  -qq \
+RUN apt-get update -qq \
  && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
  && python3 /tmp/get-pip.py \
  && pip --no-cache-dir install -U setuptools \
@@ -95,37 +93,23 @@ RUN apt-get update  -qq \
  && jupyter notebook --generate-config --allow-root \
  && apt-get -qqy autoremove --purge ${DEPENDENCIES} \
  && apt-get clean \
- && rm -rf /var/lib/apt/lists/* /tmp/*
-
-COPY --chown=1000:1000 --from=downloader /tmp/almond /tmp/almond
-
-WORKDIR /tmp/almond/project
-
-# Install Python and Jupyter
-RUN mv build.properties build.properties.bak \
- && sed -e "s/1\.3\.3/${SBT_VERSION}/g" build.properties.bak > build.properties \
- && rm -f build.properties.bak
+ && rm -rf /var/lib/apt/lists/*
 
 COPY --from=downloader ${SCALA_HOME} ${SCALA_HOME}
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
+COPY --chown=1000:1000 --from=downloader /tmp/coursier /tmp/coursier
+
+RUN chmod +x /tmp/coursier
+
+ENV COURSIER_BIN_DIR="/usr/local/bin"
+
 
 ENV SBT_HOME="${SBT_HOME}" \
     SCALA_HOME="${SCALA_HOME}" \
     PATH=${PATH}:${SBT_HOME}/bin:${SCALA_HOME}/bin
 
-WORKDIR /tmp/almond
-RUN apt-get update  -qq \
- && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
- && bash scripts/coursier.sh bootstrap \
-        -r jitpack \
-        -i user -I user:sh.almond:scala-kernel-api_${SCALA_VERSION}:${ALMOND_VERSION} \
-        sh.almond:scala-kernel_${SCALA_VERSION}:${ALMOND_VERSION} \
-        -o almond \
- && ./almond --install \
- && rm -rf almond \
- && apt-get -qqy autoremove --purge ${DEPENDENCIES} \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/* /tmp/*
+RUN /tmp/coursier launch --fork "almond:${ALMOND_VERSION}" -- --install \
+ && rm -rf /tmp/*
 
 RUN groupadd -g 1000 java \
  && useradd -g 1000 -l -m -s /bin/false -u 1000 java
