@@ -1,4 +1,4 @@
-ARG LLVM_VERSION=12
+ARG LLVM_VERSION=13
 
 FROM alpine:3 AS downloader
 
