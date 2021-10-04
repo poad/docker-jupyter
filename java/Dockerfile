@@ -2,7 +2,7 @@ ARG TEMP_JDK_DIR=/tmp/jdk
 ARG IJAVA_VERSION="1.3.0"
 ARG JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
-FROM mcr.microsoft.com/java/jdk:11-zulu-alpine as downloader
+FROM mcr.microsoft.com/java/jdk:17-zulu-alpine as downloader
 
 ARG IJAVA_VERSION
 
