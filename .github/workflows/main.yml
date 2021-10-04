@@ -50,7 +50,6 @@ jobs:
           { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11' },
           { dir: 'java', tag: 'java' },
           { dir: 'rust', tag: 'rust' },
-          { dir: 'java', tag: 'java' },
           { dir: 'scala', tag: 'scala' },
           { dir: 'nodejs', tag: 'nodejs' }
         ]    
