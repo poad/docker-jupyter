@@ -17,6 +17,7 @@ jobs:
         versions: [
           { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8' },
           { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11' },
+          { dir: 'all-in-one/jdk17', tag: 'all-in-one-jdk17' },
           { dir: 'java', tag: 'java' },
           { dir: 'rust', tag: 'rust' },
           { dir: 'java', tag: 'java' },
@@ -48,6 +49,7 @@ jobs:
         versions: [
           { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8' },
           { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11' },
+          { dir: 'all-in-one/jdk17', tag: 'all-in-one-jdk17' },
           { dir: 'java', tag: 'java' },
           { dir: 'rust', tag: 'rust' },
           { dir: 'scala', tag: 'scala' },

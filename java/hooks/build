@@ -13,9 +13,6 @@ fi
 DOCKER_CONTENT_TRUST=1
 
 docker build --build-arg BASE_TAG=${DOCKER_TAG} \
-    --build-arg JDK_VERSION="11.0.12" \
-    --build-arg ESUM="b8e8a63b79bc312aa90f3558edbea59e71495ef1a9c340e38900dd28a1c579f3" \
-    --build-arg ZULU_VERSION="11.50.19" \
     --build-arg IJAVA_VERSION="1.3.0" \
     ${DOCKERFILE_PATH_ARG} -t $IMAGE_NAME .
 

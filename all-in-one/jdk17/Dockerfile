@@ -1,13 +1,13 @@
 ARG UBUNTU_CODENAME="focal"
-ARG ZULU_VERSION="11.52.13"
-ARG JDK_VERSION="11.0.13"
-ARG SHA256SUM="77a126669b26b3a89e0117b0f28cddfcd24fcd7699b2c1d35f921487148b9a9f"
+ARG ZULU_VERSION="17.30.15"
+ARG JDK_VERSION="17.0.1"
+ARG SHA256SUM="9b8e4d1e47b02b9c2392462ee82988c189357471de3224c37173fa58e2b25112"
 ARG ZULU_ARCH="zulu${ZULU_VERSION}-ca-jdk${JDK_VERSION}-linux_x64.tar.gz"
-ARG JAVA_HOME="/usr/lib/jvm/zulu-11"
+ARG JAVA_HOME="/usr/lib/jvm/zulu-17"
 ARG JAVA_URL="https://cdn.azul.com/zulu/bin/${ZULU_ARCH}"
 
 ARG SBT_VERSION="1.5.5"
-ARG SCALA_VERSION="3.1.0"
+ARG SCALA_VERSION="2.13.6"
 ARG ALMOND_VERSION="0.11.2"
 ARG IERL_VERSION="0.4.0"
 
@@ -43,7 +43,7 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && curl --proto '=https' --tlsv1.2 -sSfo /tmp/rust_setup.sh https://sh.rustup.rs \
  && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}" \
- && curl -sSLo /tmp/erlang-solutions_2.0_all.deb https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb \
+ && curl -sSLo /tmp/erlang-solutions_all.deb https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb \
  && curl -fLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux
 
 
@@ -93,7 +93,7 @@ COPY --chown=1000:1000 --from=downloader /tmp/ierl /tmp/ierl
 COPY --chown=1000:1000 --from=downloader /tmp/rust_setup.sh /tmp/rust_setup.sh
 COPY --from=downloader /tmp/setup_nodejs.sh /tmp/setup_nodejs.sh
 COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
-COPY --from=downloader /tmp/erlang-solutions_2.0_all.deb /tmp/erlang-solutions_2.0_all.deb
+COPY --from=downloader /tmp/erlang-solutions_all.deb /tmp/erlang-solutions_all.deb
 
 ARG DEPENDENCIES="\
         autoconf \
@@ -156,7 +156,7 @@ RUN apt-get update -qq \
  && add-apt-repository ppa:deadsnakes/ppa -y \
  && chmod +x /tmp/setup_nodejs.sh \
  && /tmp/setup_nodejs.sh \
- && dpkg -i /tmp/erlang-solutions_2.0_all.deb \
+ && dpkg -i /tmp/erlang-solutions_all.deb \
  && apt-get update -qq \
  && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
  && apt-get clean \

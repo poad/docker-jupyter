@@ -14,11 +14,11 @@ DOCKER_CONTENT_TRUST=1
 
 docker build --build-arg BASE_TAG=${DOCKER_TAG} \
     --build-arg UBUNTU_CODENAME="focal" \
-    --build-arg JDK_VERSION="11.0.12" \
-    --build-arg ESUM="b8e8a63b79bc312aa90f3558edbea59e71495ef1a9c340e38900dd28a1c579f3" \
-    --build-arg ZULU_VERSION="11.50.19" \
-    --build-arg SBT_VERSION="1.5.2" \
-    --build-arg SCALA_VERSION="2.13.5" \
+    --build-arg ZULU_VERSION="11.52.13" \
+    --build-arg JDK_VERSION="11.0.13" \
+    --build-arg ESUM="77a126669b26b3a89e0117b0f28cddfcd24fcd7699b2c1d35f921487148b9a9f" \
+    --build-arg SBT_VERSION="1.5.5" \
+    --build-arg SCALA_VERSION="2.13.4" \
     --build-arg ALMOND_VERSION="0.11.1" \
     --build-arg IERL_VERSION="0.4.0" \
     --build-arg NODE_VERSION="14.x" \
