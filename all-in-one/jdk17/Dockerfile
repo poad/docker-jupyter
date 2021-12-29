@@ -1,4 +1,3 @@
-ARG UBUNTU_CODENAME="focal"
 ARG ZULU_VERSION="17.30.15"
 ARG JDK_VERSION="17.0.1"
 ARG SHA256SUM="9b8e4d1e47b02b9c2392462ee82988c189357471de3224c37173fa58e2b25112"
@@ -6,13 +5,17 @@ ARG ZULU_ARCH="zulu${ZULU_VERSION}-ca-jdk${JDK_VERSION}-linux_x64.tar.gz"
 ARG JAVA_HOME="/usr/lib/jvm/zulu-17"
 ARG JAVA_URL="https://cdn.azul.com/zulu/bin/${ZULU_ARCH}"
 
+ARG UBUNTU_CODENAME="focal"
+
 ARG SBT_VERSION="1.6.1"
 ARG SCALA_VERSION="2.13.4"
+# ARG SCALA2_LATEST_VERSION="2.13.7"
+# ARG SCALA3_VERSION="3.0.4"
 ARG ALMOND_VERSION="0.11.2"
 ARG IERL_VERSION="0.4.0"
 
 ARG LLVM_VERSION=13
-ARG NODE_VERSION="14.x"
+ARG NODE_VERSION="16.x"
 
 FROM alpine:3 AS downloader
 
@@ -47,7 +50,6 @@ RUN apk --update add --no-cache --virtual .build-deps \
  && curl -fLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux
 
 
-
 FROM buildpack-deps:${UBUNTU_CODENAME}-curl
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
@@ -63,6 +65,8 @@ ARG JAVA_HOME
 
 ARG SBT_VERSION
 ARG SCALA_VERSION
+# ARG SCALA2_LATEST_VERSION
+# ARG SCALA3_VERSION
 ARG ALMOND_VERSION
 ARG IERL_VERSION
 
@@ -145,10 +149,15 @@ ARG DEPENDENCIES="\
         tk-dev \
         uuid-dev"
 
-COPY --from=downloader /tmp/coursier /tmp/coursier
+COPY --chown=1000:1000 --from=downloader /tmp/coursier /usr/local/bin/cs
+
+RUN chmod +x /usr/local/bin/cs
 
 # extra dependencies (over what buildpack-deps already includes)
-RUN apt-get update -qq \
+RUN \
+  --mount=type=cache,target=/var/cache/apt \
+  --mount=type=cache,target=/var/lib/apt \
+ apt-get update -qq \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && curl -sL https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
  && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
@@ -179,11 +188,17 @@ RUN apt-get update -qq \
  && ./ierl install lfe \
  && ./ierl install erlang \
  && ln -s "/usr/bin/clang-${LLVM_VERSION}" /usr/bin/clang \
- && chmod +x /tmp/coursier \
- && /tmp/coursier launch --fork "almond:${ALMOND_VERSION}" -- --install \
- && rm -rf /tmp/coursier \
  && groupadd -g 1000 "${USER_NAME}" \
- && useradd -g 1000 -l -m -s /bin/false -u 1000 "${USER_NAME}"
+ && useradd -g 1000 -l -m -s /bin/false -u 1000 "${USER_NAME}" \
+ && cs bootstrap \
+      -r jitpack \
+      -i user -I "user:sh.almond:scala-kernel-api_${SCALA_VERSION}:${ALMOND_VERSION}" \
+      "sh.almond:scala-kernel_${SCALA_VERSION}:${ALMOND_VERSION}" \
+      -M almond.ScalaKernel \
+      --default=true --sources \
+ && cs launch --fork "almond:${ALMOND_VERSION}" -M almond.ScalaKernel --scala "${SCALA_VERSION}" -- --install --id scala$(echo "${SCALA_VERSION}" | cut -f1-2 -d. | sed "s/\.//") --display-name "Scala ($(echo ${SCALA_VERSION} | cut -f1-2 -d.))"
+# RUN cs launch --fork "almond:${ALMOND_VERSION}" -M almond.ScalaKernel --scala "${SCALA2_LATEST_VERSION}" -- --install --id "scala2-latest" --display-name "Scala (2.x latest)" \
+# RUN cs launch --fork "almond:${ALMOND_VERSION}" -M almond.ScalaKernel --scala "${SCALA3_VERSION}" -- --install --id scala$(echo "${SCALA3_VERSION}" | cut -f1-2 -d. | sed "s/\.//") --display-name "Scala ($(echo ${SCALA3_VERSION} | cut -f1-2 -d.))" \
 
 USER ${USER_NAME}
 
@@ -197,7 +212,7 @@ ENV PATH="${PATH}:${SBT_HOME}/bin:/${USER_HOME}/.cargo/bin:/usr/local/bin:${USER
 
 WORKDIR /tmp
 
-RUN jupyter notebook --generate-config --allow-root \
+RUN jupyter notebook --generate-config \
  && chmod +x /tmp/rust_setup.sh \
  && /tmp/rust_setup.sh -y \
  && cargo install evcxr_jupyter --no-default-features \

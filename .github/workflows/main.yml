@@ -30,6 +30,8 @@ jobs:
       if: github.event_name == 'pull_request' && github.event_name != 'schedule'
     - name: "Build  ${{ matrix.versions.tag }}"
       if: github.event_name == 'pull_request' && github.event_name != 'schedule'
+      env:
+        DOCKER_BUILDKIT: 1
       run: |
         CUR=$(pwd) && \
         cd ${{ matrix.versions.dir }} && \
@@ -37,11 +39,6 @@ jobs:
         chmod +x hooks/build && \
         DOCKER_TAG=${{ matrix.versions.tag }} DOCKERFILE_PATH=$(pwd)/Dockerfile IMAGE_NAME=${IMAGRE_NAME} hooks/build . && \
         cd ${CUR}
-    - name: Hadolint
-      if: github.event_name == 'pull_request' && github.event_name != 'schedule'
-      uses: brpaz/hadolint-action@master
-      with:
-        dockerfile: ${{ matrix.versions.dir }}/Dockerfile
   
   docker_push:
     strategy:
@@ -61,6 +58,8 @@ jobs:
       if: github.event_name != 'pull_request'
     - name: Build ${{ matrix.versions.tag }} and push
       if: github.event_name != 'pull_request'
+      env:
+        DOCKER_BUILDKIT: 1
       run: |
         echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u poad --password-stdin && \
         CUR=$(pwd) && \
