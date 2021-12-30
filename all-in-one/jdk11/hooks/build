@@ -19,9 +19,11 @@ docker build --build-arg BASE_TAG=${DOCKER_TAG} \
     --build-arg ESUM="77a126669b26b3a89e0117b0f28cddfcd24fcd7699b2c1d35f921487148b9a9f" \
     --build-arg SBT_VERSION="1.6.1" \
     --build-arg SCALA_VERSION="2.13.4" \
-    --build-arg ALMOND_VERSION="0.11.1" \
+    --build-arg ALMOND_VERSION="0.11.2" \
     --build-arg IERL_VERSION="0.4.0" \
-    --build-arg NODE_VERSION="14.x" \
+    --build-arg NODE_VERSION="16.x" \
+    --progress=plain \
+    --build-arg BUILDKIT_INLINE_CACHE=1 \
     ${DOCKERFILE_PATH_ARG} -t $IMAGE_NAME .
 
 echo "------ HOOK END - BUILD -------"
