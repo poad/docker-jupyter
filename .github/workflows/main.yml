@@ -15,57 +15,60 @@ jobs:
     strategy:
       matrix:
         versions: [
-          { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8' },
-          { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11' },
-          { dir: 'all-in-one/jdk17', tag: 'all-in-one-jdk17' },
-          { dir: 'java', tag: 'java' },
-          { dir: 'rust', tag: 'rust' },
-          { dir: 'java', tag: 'java' },
-          { dir: 'scala', tag: 'scala' },
-          { dir: 'nodejs', tag: 'nodejs' }
+          { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8', platforms: 'linux/amd64' },
+          { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11', platforms: 'linux/amd64' },
+          { dir: 'all-in-one/jdk17', tag: 'all-in-one-jdk17', platforms: 'linux/amd64,linux/arm64' },
+          { dir: 'java', tag: 'java', platforms: 'linux/amd64,linux/arm64' },
+          { dir: 'rust', tag: 'rust', platforms: 'linux/amd64' },
+          { dir: 'scala', tag: 'scala', platforms: 'linux/amd64' },
+          { dir: 'nodejs', tag: 'nodejs', platforms: 'linux/amd64,linux/arm64' }
         ]    
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+      with:
+        install: true
+
+    - uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Login to DockerHub
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v1 
+      with:
+        username: poad
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: "Build ${{ matrix.versions.tag }}"
       if: github.event_name == 'pull_request' && github.event_name != 'schedule'
-    - name: "Build  ${{ matrix.versions.tag }}"
-      if: github.event_name == 'pull_request' && github.event_name != 'schedule'
-      env:
-        DOCKER_BUILDKIT: 1
-      run: |
-        CUR=$(pwd) && \
-        cd ${{ matrix.versions.dir }} && \
-        IMAGRE_NAME=poad/docker-jupyter:${{ matrix.versions.tag }} && \
-        chmod +x hooks/build && \
-        DOCKER_TAG=${{ matrix.versions.tag }} DOCKERFILE_PATH=$(pwd)/Dockerfile IMAGE_NAME=${IMAGRE_NAME} hooks/build . && \
-        cd ${CUR}
+      uses: docker/build-push-action@v2
+      with:
+        push: false
+        pull: true
+        context: ${{ matrix.versions.dir }}
+        platforms: ${{ matrix.versions.platforms }}
+        tags: poad/docker-jupyter:${{ matrix.versions.tag }}
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
   
-  docker_push:
-    strategy:
-      matrix:
-        versions: [
-          { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8' },
-          { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11' },
-          { dir: 'all-in-one/jdk17', tag: 'all-in-one-jdk17' },
-          { dir: 'java', tag: 'java' },
-          { dir: 'rust', tag: 'rust' },
-          { dir: 'scala', tag: 'scala' },
-          { dir: 'nodejs', tag: 'nodejs' }
-        ]    
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@master
+    - name: "Build and push ${{ matrix.versions.tag }}"
       if: github.event_name != 'pull_request'
-    - name: Build ${{ matrix.versions.tag }} and push
-      if: github.event_name != 'pull_request'
-      env:
-        DOCKER_BUILDKIT: 1
-      run: |
-        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u poad --password-stdin && \
-        CUR=$(pwd) && \
-        cd ${{ matrix.versions.dir }} && \
-        IMAGRE_NAME=poad/docker-jupyter:${{ matrix.versions.tag }} && \
-        chmod +x hooks/build && \
-        DOCKER_TAG=${{ matrix.versions.tag }} DOCKERFILE_PATH=$(pwd)/Dockerfile IMAGE_NAME=${IMAGRE_NAME} hooks/build . && \
-        docker push ${IMAGRE_NAME} && \
-        cd ${CUR}
+      uses: docker/build-push-action@v2
+      with:
+        push: false
+        pull: true
+        context: ${{ matrix.versions.dir }}
+        platforms: ${{ matrix.versions.platforms }}
+        tags: poad/docker-jupyter:${{ matrix.versions.tag }}
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1

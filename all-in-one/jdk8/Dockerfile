@@ -142,7 +142,7 @@ ARG DEPENDENCIES="\
         make \
         nodejs \
         patch \
-        python3.9 \
+        python3.10 \
         unzip \
         xz-utils \
         zlib1g-dev \
