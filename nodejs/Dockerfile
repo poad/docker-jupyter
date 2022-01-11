@@ -1,79 +1,129 @@
+ARG UBUNTU_CODENAME="focal"
+
+ARG NODE_VERSION="16.x"
+
 FROM alpine:3 AS downloader
 
-RUN apk --update add --no-cache \
-        curl \
- && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
+ARG NODE_VERSION
 
-FROM alpine:3
+RUN apk --update add --no-cache --virtual .build-deps \
+  curl \
+  gnupg \
+  xz \
+ && rm -rf /var/cache/apk/* \
+ && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
+ && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}"
+
+FROM buildpack-deps:${UBUNTU_CODENAME}-curl
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
 
-ARG USER_NAME=node
+ARG USER_NAME="node"
 ARG USER_HOME=/home/${USER_NAME}
 
-RUN addgroup -g 1000 -S "${USER_NAME}" \
- && adduser -u 1000 -S  "${USER_NAME}" -G "${USER_NAME}"
+ENV LANGUAGE="en_US:en"
+ENV LC_ALL="en_US.UTF-8 "
+ENV PATH="${PATH}:${JAVA_HOME}/bin"
 
+USER root
 
-COPY requirements.txt /tmp/requirements.txt
+WORKDIR /tmp
+
+COPY --chown=1000:1000 requirements.txt /tmp/requirements.txt
+COPY --from=downloader /tmp/setup_nodejs.sh /tmp/setup_nodejs.sh
 COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
-RUN apk --update add --no-cache --virtual \
-        build-base \
-        bash \
-        ca-certificates \
-        cargo \
-        cmake \
-        curl \
-        czmq-dev \
-        freetype-dev \
-        gcc \
-        g++ \
-        git \
-        gnupg \
-        libssl1.1 \
-        libzmq \
-        libffi-dev \
-        libxml2-dev \
-        libxslt-dev \
-        libpng-dev \
-        m4 \
-        make \
-        musl-dev \
-        npm \
-        nodejs \
-        openssl-dev \
-        py3-pyzmq \
-        python3 \
-        python3-dev \
-        rsync \
-        unzip \
-        zlib \
- && rm -rf /var/cache/apk/* \
- && npm i -g n yarn \
- && n lts \
- && python3 /tmp/get-pip.py \
+ARG DEPENDENCIES="\
+  autoconf \
+  automake \
+  bzip2 \
+  dpkg-dev \
+  file \
+  gcc \
+  git \
+  imagemagick \
+  libbz2-dev \
+  libc6-dev \
+  libcurl4-openssl-dev \
+  libdb-dev \
+  libevent-dev \
+  libffi-dev \
+  libgdbm-dev \
+  libglib2.0-dev \
+  libgmp-dev \
+  libjpeg-dev \
+  libkrb5-dev \
+  liblzma-dev \
+  libmagickcore-dev \
+  libmagickwand-dev \
+  libmaxminddb-dev \
+  libncurses5-dev \
+  libncursesw5-dev \
+  libpng-dev \
+  libpq-dev \
+  libreadline-dev \
+  libsqlite3-dev \
+  libssl-dev \
+  libtool \
+  libwebp-dev \
+  libxml2-dev \
+  libxslt-dev \
+  libyaml-dev \
+  libzmq3-dev \
+  make \
+  nodejs \
+  patch \
+  python3-dev \
+  python3.9 \
+  python3.9-dev \
+  libpython3.9-dev \
+  unzip \
+  xz-utils \
+  zlib1g-dev \
+  tk-dev \
+  uuid-dev"
+
+RUN apt-get update -qq \
+ && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
+ && add-apt-repository ppa:git-core/ppa -y \
+ && add-apt-repository ppa:deadsnakes/ppa -y \
+ && chmod +x /tmp/setup_nodejs.sh \
+ && /tmp/setup_nodejs.sh \
+ && apt-get update -qq \
+ && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists
+
+RUN python3 /tmp/get-pip.py --no-cache-dir \
+ && pip3 install --no-cache-dir -U pip \
  && pip install --no-cache-dir -U setuptools \
- && pip install --no-cache-dir -r /tmp/requirements.txt \
+ && npm install -g yarn configurable-http-proxy
+
+RUN pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
- && npm install -g --unsafe-perm ijavascript \
- && ijsinstall --install=global \
- && rm -rf /tmp/get-pip.py
+ && rm -f /tmp/requirements.txt /tmp/get-pip.py \
+ && groupadd -g 1000 "${USER_NAME}" \
+ && useradd -g 1000 -l -m -s /bin/false -u 1000 "${USER_NAME}"
 
 USER ${USER_NAME}
 
-WORKDIR ${USER_HOME}
+ENV LANGUAGE="en_US:en"
+ENV LC_ALL="en_US.UTF-8 "
+ENV PATH="${PATH}:/usr/local/bin"
 
-RUN jupyter notebook --generate-config --allow-root \
- && mkdir -p ${USER_HOME}/.jupyter
+WORKDIR /tmp
 
-ADD jupyter_notebook_config.py ${USER_HOME}/.jupyter/jupyter_notebook_config.py
+RUN jupyter notebook --generate-config \
+ && mkdir -p "${USER_HOME}/.jupyter" \
+ && mkdir -p "${USER_HOME}/notebook" \
+ && chown -R "${USER_NAME}:${USER_NAME}" "${USER_HOME}"
 
-RUN mkdir -p ${USER_HOME}/notebook
+COPY --chown=1000:1000 jupyter_notebook_config.py ${USER_HOME}/.jupyter/jupyter_notebook_config.py
+
 WORKDIR ${USER_HOME}/notebook
 
 HEALTHCHECK CMD [ "npm", "--version" ]

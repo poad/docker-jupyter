@@ -1,5 +1,5 @@
-ARG ZULU_VERSION="11.52.13"
 ARG JDK_VERSION="11.0.13"
+ARG ZULU_VERSION="11.52.13"
 ARG SHA256SUM="77a126669b26b3a89e0117b0f28cddfcd24fcd7699b2c1d35f921487148b9a9f"
 ARG ZULU_ARCH="zulu${ZULU_VERSION}-ca-jdk${JDK_VERSION}-linux_x64.tar.gz"
 ARG JAVA_HOME="/usr/lib/jvm/zulu-11"
@@ -142,7 +142,7 @@ ARG DEPENDENCIES="\
         make \
         nodejs \
         patch \
-        python3.9 \
+        python3.10 \
         unzip \
         xz-utils \
         zlib1g-dev \
