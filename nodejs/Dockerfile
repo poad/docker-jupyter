@@ -4,6 +4,9 @@ ARG NODE_VERSION="16.x"
 ARG LLVM_VERSION=13
 ARG PYTHON_VERSION=3.10
 
+ARG USER_NAME="node"
+ARG USER_HOME="/home/${USER_NAME}"
+
 FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
 
 ARG NODE_VERSION
@@ -15,6 +18,9 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
 FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS base
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
+
+ARG USER_NAME
+ARG USER_HOME
 
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
@@ -150,3 +156,15 @@ HEALTHCHECK CMD [ "npm", "--version" ]
 EXPOSE 8888
 
 CMD ["jupyter", "lab"]
+
+FROM base AS typescript
+
+USER root
+
+ARG USER_NAME
+
+RUN npm install -g itypescript \
+ && its --install=global
+
+USER ${USER_NAME}
+

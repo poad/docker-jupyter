@@ -8,13 +8,13 @@ The Docker image for Jupyter notebook with any languages
 
 ## Tags
 
-### All in one based JDK8
+### All in one based JDK 8
 
 ```$sh
 docker pull poad/docker-jupyter:all-in-one-jdk8
 ```
 
-Jupyter notebook with follow kernels based JDK8
+Jupyter notebook with follow kernels based JDK 8
 
 - Scala ([almond](https://almond.sh))
 - Rust ([evcxr](https://github.com/google/evcxr/tree/master/evcxr_jupyter))
@@ -24,13 +24,13 @@ Jupyter notebook with follow kernels based JDK8
 - Node.js ([IJavascript](https://github.com/n-riesco/ijavascript))
 - TypeScript ([ITypescript](https://github.com/nearbydelta/itypescript))
 
-### All in one based JDK11
+### All in one based JDK 11
 
 ```$sh
 docker pull poad/docker-jupyter:all-in-one-jdk11
 ```
 
-Jupyter notebook with follow kernels based JDK11
+Jupyter notebook with follow kernels based JDK 11
 
 - scala ([almond](https://almond.sh))
 - rust ([evcxr](https://github.com/google/evcxr/tree/master/evcxr_jupyter))
@@ -40,13 +40,13 @@ Jupyter notebook with follow kernels based JDK11
 - Node.js ([IJavascript](https://github.com/n-riesco/ijavascript))
 - TypeScript ([ITypescript](https://github.com/nearbydelta/itypescript))
 
-### All in one based JDK17
+### All in one based JDK 17
 
 ```$sh
 docker pull poad/docker-jupyter:all-in-one-jdk17
 ```
 
-Jupyter notebook with follow kernels based JDK17
+Jupyter notebook with follow kernels based JDK 17
 
 - scala ([almond](https://almond.sh))
 - rust ([evcxr](https://github.com/google/evcxr/tree/master/evcxr_jupyter))

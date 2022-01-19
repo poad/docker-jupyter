@@ -190,6 +190,11 @@ RUN npm install -g npm \
 # RUN cs launch --fork "almond:${ALMOND_VERSION}" -M almond.ScalaKernel --scala "${SCALA2_LATEST_VERSION}" -- --install --id "scala2-latest" --display-name "Scala (2.x latest)" \
 # RUN cs launch --fork "almond:${ALMOND_VERSION}" -M almond.ScalaKernel --scala "${SCALA3_VERSION}" -- --install --id scala$(echo "${SCALA3_VERSION}" | cut -f1-2 -d. | sed "s/\.//") --display-name "Scala ($(echo ${SCALA3_VERSION} | cut -f1-2 -d.))" \
 
+RUN npm install -g itypescript \
+ && its --install=global \
+ && npm install -g itypescript \
+ && its --install=global
+
 USER ${USER_NAME}
 
 ENV SBT_HOME="/usr/local/sbt"
