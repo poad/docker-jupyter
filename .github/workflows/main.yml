@@ -65,7 +65,7 @@ jobs:
       if: github.event_name != 'pull_request'
       uses: docker/build-push-action@v2
       with:
-        push: false
+        push: true
         pull: true
         context: ${{ matrix.versions.dir }}
         platforms: ${{ matrix.versions.platforms }}

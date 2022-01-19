@@ -1,12 +1,14 @@
 ARG UBUNTU_CODENAME="focal"
 
 ARG NODE_VERSION="16.x"
+ARG LLVM_VERSION=13
 
 FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
 
 ARG NODE_VERSION
 
 RUN curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
+ && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}"
 
 FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS base
@@ -19,6 +21,8 @@ ENV LANG C.UTF-8
 ARG USER_NAME="node"
 ARG USER_HOME=/home/${USER_NAME}
 
+ARG LLVM_VERSION
+
 ENV LANGUAGE="en_US:en"
 ENV LC_ALL="en_US.UTF-8"
 ENV PATH="${PATH}:${JAVA_HOME}/bin"
@@ -27,9 +31,13 @@ USER root
 
 WORKDIR /tmp
 
+COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
 COPY --chown=1000:1000 requirements.txt /tmp/requirements.txt
 COPY --from=downloader /tmp/setup_nodejs.sh /tmp/setup_nodejs.sh
 COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
+
+ENV CC="/usr/bin/clang-${LLVM_VERSION}"
+ENV CXX="/usr/bin/clang++-${LLVM_VERSION}"
 
 ARG DEPENDENCIES="\
   autoconf \
@@ -38,6 +46,9 @@ ARG DEPENDENCIES="\
   dpkg-dev \
   file \
   gcc \
+  clang-${LLVM_VERSION} \
+  clang++-${LLVM_VERSION} \
+  lld-${LLVM_VERSION} \
   git \
   imagemagick \
   libbz2-dev \
@@ -81,7 +92,9 @@ ARG DEPENDENCIES="\
   tk-dev \
   uuid-dev"
 
-RUN apt-get update -qq \
+RUN cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
+ && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && apt-get update -qq \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && add-apt-repository ppa:git-core/ppa -y \
  && add-apt-repository ppa:deadsnakes/ppa -y \
@@ -90,22 +103,25 @@ RUN apt-get update -qq \
  && apt-get update -qq \
  && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
  && apt-get clean \
- && rm -rf /var/lib/apt/lists
+ && rm -rf /var/lib/apt/lists \
+ && rm -rf /tmp/llvm-snapshot.gpg.key /tmp/setup_nodejs.sh
 
 RUN python3 /tmp/get-pip.py --no-cache-dir \
  && pip3 install --no-cache-dir -U pip \
  && pip install --no-cache-dir -U setuptools \
  && npm -g i npm \
- && npm install -g yarn configurable-http-proxy
-# RUN npm -g i ijavascript-plotly
+ && npm -g i yarn configurable-http-proxy
 
 RUN pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
+ && npm -g i --unsafe-perm ijavascript \
+ && ijsinstall --install=global \
  && rm -f /tmp/requirements.txt /tmp/get-pip.py \
  && groupadd -g 1000 "${USER_NAME}" \
  && useradd -g 1000 -l -m -s /bin/false -u 1000 "${USER_NAME}"
 
+# RUN npm -g i ijavascript-plotly
 # RUN jupyter labextension install jupyterlab-plotly @jupyter-widgets/jupyterlab-manager plotlywidget
 
 USER ${USER_NAME}

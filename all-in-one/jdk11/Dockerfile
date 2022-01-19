@@ -79,8 +79,8 @@ ENV SBT_HOME="/usr/local/sbt"
 ENV LANGUAGE="en_US:en"
 ENV LC_ALL="en_US.UTF-8 "
 ENV JAVA_HOME="${JAVA_HOME}"
-ENV CC="/usr/bin/clang"
-ENV CXX="/usr/bin/clang++"
+ENV CC="/usr/bin/clang-${LLVM_VERSION}"
+ENV CXX="/usr/bin/clang++-${LLVM_VERSION}"
 ENV PATH="${PATH}:${JAVA_HOME}/bin"
 
 USER root
@@ -109,6 +109,7 @@ ARG DEPENDENCIES="\
         gcc \
         git \
         clang-${LLVM_VERSION} \
+        clang++-${LLVM_VERSION} \
         lld-${LLVM_VERSION} \
         imagemagick \
         libbz2-dev \
@@ -176,11 +177,14 @@ RUN \
  && cd ${MAN_DIR} \
  && find ${JAVA_HOME}/man/man1 -type f -name "*.1" -exec ln -s {} . \; \
  && python3 /tmp/get-pip.py \
- && npm install -g yarn configurable-http-proxy \
+ && pip3 install --no-cache-dir -U setuptools pip \
  && pip3 install --no-cache-dir -U setuptools pip \
  && pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
+ && npm install -g yarn configurable-http-proxy \
+ && npm -g i --unsafe-perm ijavascript \
+ && ijsinstall --install=global \
  && rm -f /tmp/requirements.txt /tmp/get-pip.py \
  && cd /tmp \
  && chmod u+x ierl \

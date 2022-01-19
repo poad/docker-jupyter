@@ -31,6 +31,7 @@ RUN ARCH=$(apk --print-arch) \
  && curl -sSLo /tmp/zulu-repo_all.deb https://cdn.azul.com/zulu/bin/zulu-repo_1.0.0-3_all.deb \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && curl -sSLo /tmp/ierl "https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl" \
+ && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && curl --proto '=https' --tlsv1.2 -sSfo /tmp/rust_setup.sh https://sh.rustup.rs \
  && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}" \
@@ -62,15 +63,16 @@ ARG USER_HOME=/home/${USER_NAME}
 
 ENV SBT_HOME="/usr/local/sbt"
 ENV LANGUAGE="en_US:en"
-ENV LC_ALL="en_US.UTF-8 "
-ENV CC="/usr/bin/clang"
-ENV CXX="/usr/bin/clang++"
+ENV LC_ALL="en_US.UTF-8"
+ENV CC="/usr/bin/clang-${LLVM_VERSION}"
+ENV CXX="/usr/bin/clang++-${LLVM_VERSION}"
 
 USER root
 
 WORKDIR /tmp
 
 COPY --from=downloader /tmp/zulu-repo_all.deb /tmp/zulu-repo_all.deb
+COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
 COPY --chown=1000:1000 assets/tmp/requirements.txt /tmp/requirements.txt
 COPY --chown=1000:1000 --from=downloader /tmp/ierl /tmp/ierl 
@@ -89,6 +91,7 @@ ARG DEPENDENCIES="\
         gcc \
         git \
         clang-${LLVM_VERSION} \
+        clang++-${LLVM_VERSION} \
         lld-${LLVM_VERSION} \
         imagemagick \
         libbz2-dev \
@@ -141,7 +144,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "${ZULU_AP
  && apt-get install /tmp/zulu-repo_all.deb \
  && apt-get update -qq \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common "zulu${JDK_MAJOR_VERSION}-ca-jdk" \
- && curl -sL https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
+ && cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
  && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
  && add-apt-repository ppa:git-core/ppa -y \
  && add-apt-repository ppa:deadsnakes/ppa -y \
@@ -151,14 +154,17 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "${ZULU_AP
  && apt-get update -qq \
  && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
  && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /tmp/llvm-snapshot.gpg.key /tmp/setup_nodejs.sh
 
 RUN python3 /tmp/get-pip.py \
- && npm install -g yarn configurable-http-proxy \
  && pip3 install --no-cache-dir -U setuptools pip \
  && pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
+ && npm install -g yarn configurable-http-proxy \
+ && npm -g i --unsafe-perm ijavascript \
+ && ijsinstall --install=global \
  && rm -f /tmp/requirements.txt /tmp/get-pip.py \
  && cd /tmp \
  && chmod u+x ierl \
