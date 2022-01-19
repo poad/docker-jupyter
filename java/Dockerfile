@@ -1,11 +1,9 @@
 ARG JDK_MAJOR_VERSION="17"
-ARG ZULU_APT_KEY="0xB1998361219BD9C9"
-
 ARG UBUNTU_CODENAME="focal"
-
 ARG IJAVA_VERSION="1.3.0"
-
 ARG NODE_VERSION="16.x"
+ARG PYTHON_VERSION=3.10
+ARG LLVM_VERSION=13
 
 FROM alpine:3 AS downloader
 
@@ -35,7 +33,8 @@ RUN ARCH=$(apk --print-arch) \
     gnupg \
     xz \
  && rm -rf /var/cache/apk/* \
- && curl -sSLo /tmp/zulu-repo_all.deb https://cdn.azul.com/zulu/bin/zulu-repo_1.0.0-3_all.deb \
+ && curl -sSLo /tmp/corretto.key https://apt.corretto.aws/corretto.key \
+ && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl -sSLo "ijava-${IJAVA_VERSION}.zip" "https://github.com/SpencerPark/IJava/releases/download/v${IJAVA_VERSION}/ijava-${IJAVA_VERSION}.zip" \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}" \
@@ -51,8 +50,8 @@ LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 ENV LANG C.UTF-8
 
 ARG JDK_MAJOR_VERSION
-ARG ZULU_APT_KEY
-
+ARG PYTHON_VERSION
+ARG LLVM_VERSION
 
 ARG USER_NAME="java"
 ARG USER_HOME=/home/${USER_NAME}
@@ -64,7 +63,8 @@ USER root
 
 WORKDIR /tmp
 
-COPY --from=downloader /tmp/zulu-repo_all.deb /tmp/zulu-repo_all.deb
+COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
+COPY --from=downloader /tmp/corretto.key /tmp/corretto.key
 COPY --from=downloader /tmp/setup_nodejs.sh /tmp/setup_nodejs.sh
 COPY --chown=1000:1000 requirements.txt /tmp/requirements.txt
 COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
@@ -110,8 +110,10 @@ ARG DEPENDENCIES="\
     make \
     nodejs \
     patch \
-    python3-dev \
-    python3.10 \
+    python${PYTHON_VERSION} \
+    python${PYTHON_VERSION}-dev \
+    python${PYTHON_VERSION}-distutils \
+    libpython${PYTHON_VERSION}-dev \
     unzip \
     xz-utils \
     zlib1g-dev \
@@ -122,22 +124,29 @@ ARG DEPENDENCIES="\
 ARG DEBIAN_FRONTEND=noninteractive
 
 # extra dependencies (over what buildpack-deps already includes)
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "${ZULU_APT_KEY}" \
- && apt-get install /tmp/zulu-repo_all.deb \
- && apt-get update -qq \
- && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common "zulu${JDK_MAJOR_VERSION}-ca-jdk" \
+RUN apt-get update -qq \
+ && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
+ && cat /tmp/corretto.key | apt-key add - \
+ && rm -rf /tmp/corretto.key \
+ && echo "deb https://apt.corretto.aws stable main" > /etc/apt/sources.list.d/aws-corretto.list \
+ && cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
+ && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
  && add-apt-repository ppa:git-core/ppa -y \
  && add-apt-repository ppa:deadsnakes/ppa -y \
  && chmod +x /tmp/setup_nodejs.sh \
  && /tmp/setup_nodejs.sh \
  && apt-get update -qq \
- && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
+ && apt-get install -qqy --no-install-recommends "java-${JDK_MAJOR_VERSION}-amazon-corretto-jdk" ${DEPENDENCIES} \
  && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /tmp/llvm-snapshot.gpg.key /tmp/setup_nodejs.sh
 
-RUN python3 /tmp/get-pip.py \
+RUN npm install -g npm \
  && npm install -g yarn configurable-http-proxy \
- && pip3 install --no-cache-dir -U setuptools pip \
+ && update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python${PYTHON_VERSION}" 31000 \
+ && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
+ && python /tmp/get-pip.py --no-cache-dir \
+ && pip install --no-cache-dir -U setuptools pip \
  && pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
