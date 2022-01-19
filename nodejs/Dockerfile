@@ -2,19 +2,14 @@ ARG UBUNTU_CODENAME="focal"
 
 ARG NODE_VERSION="16.x"
 
-FROM alpine:3 AS downloader
+FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
 
 ARG NODE_VERSION
 
-RUN apk --update add --no-cache --virtual .build-deps \
-  curl \
-  gnupg \
-  xz \
- && rm -rf /var/cache/apk/* \
- && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
+RUN curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}"
 
-FROM buildpack-deps:${UBUNTU_CODENAME}-curl
+FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS base
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
@@ -25,7 +20,7 @@ ARG USER_NAME="node"
 ARG USER_HOME=/home/${USER_NAME}
 
 ENV LANGUAGE="en_US:en"
-ENV LC_ALL="en_US.UTF-8 "
+ENV LC_ALL="en_US.UTF-8"
 ENV PATH="${PATH}:${JAVA_HOME}/bin"
 
 USER root
@@ -100,7 +95,9 @@ RUN apt-get update -qq \
 RUN python3 /tmp/get-pip.py --no-cache-dir \
  && pip3 install --no-cache-dir -U pip \
  && pip install --no-cache-dir -U setuptools \
+ && npm -g i npm \
  && npm install -g yarn configurable-http-proxy
+# RUN npm -g i ijavascript-plotly
 
 RUN pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
@@ -108,6 +105,8 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt \
  && rm -f /tmp/requirements.txt /tmp/get-pip.py \
  && groupadd -g 1000 "${USER_NAME}" \
  && useradd -g 1000 -l -m -s /bin/false -u 1000 "${USER_NAME}"
+
+# RUN jupyter labextension install jupyterlab-plotly @jupyter-widgets/jupyterlab-manager plotlywidget
 
 USER ${USER_NAME}
 
