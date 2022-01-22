@@ -1,4 +1,4 @@
-ARG JAVA_VERSION=8
+ARG JAVA_VERSION=11
 ARG SBT_VERSION="1.6.1"
 ARG SCALA_VERSION="2.13.4"
 # ARG SCALA2_LATEST_VERSION="2.13.7"
@@ -6,6 +6,7 @@ ARG SCALA_VERSION="2.13.4"
 ARG SBT_HOME=/usr/local/sbt
 ARG ALMOND_VERSION="0.11.2"
 ARG PYTHON_VERSION=3.10
+ARG LLVM_VERSION=13
 
 FROM alpine:3 AS downloader
 
@@ -13,19 +14,19 @@ ARG SBT_VERSION
 
 WORKDIR /tmp
 
-RUN apk --update add --no-cache --virtual .build-deps \
+RUN ARCH=$(apk --print-arch) \
+ && apk --update add --no-cache --virtual .build-deps \
     git \
     curl \
     gnupg \
     xz \
- && rm -rf /var/cache/apk/*
-
-RUN curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
+ && rm -rf /var/cache/apk/* \
+ && curl -sSLo /tmp/corretto.key https://apt.corretto.aws/corretto.key \
+ && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
+ && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
- && curl -fLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux
+ && curl -fLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-${ARCH}-pc-linux
 
-
-FROM mcr.microsoft.com/java/jdk:${JAVA_VERSION}-zulu-ubuntu AS JDK
 
 FROM ubuntu:focal AS base
 
@@ -35,79 +36,71 @@ ENV DEBIAN_FRONTEND noninteractive
 
 USER root
 
+ARG PYTHON_VERSION
+ARG LLVM_VERSION
+
 ARG DEPENDENCIES="\
-     curl \
-     libcurl4-openssl-dev \
-     libssl-dev \
-     build-essential \
-     python3 \
-     python3-distutils \
-     ca-certificates \
-     software-properties-common"
+    libcurl4-openssl-dev \
+    libssl-dev \
+    build-essential \
+    git \
+    clang-${LLVM_VERSION} \
+    clang++-${LLVM_VERSION} \
+    lld-${LLVM_VERSION} \
+    nodejs \
+    patch \
+    python${PYTHON_VERSION} \
+    python${PYTHON_VERSION}-dev \
+    python${PYTHON_VERSION}-distutils \
+    libpython${PYTHON_VERSION}-dev \
+    ca-certificates \
+    software-properties-common"
 
 ARG JAVA_VERSION
 
-ARG JAVA_HOME_DIR=java-${JAVA_VERSION}-openjdk-amd64
 ARG SBT_HOME
-ARG PYTHON_VERSION
 
 ENV COURSIER_BIN_DIR="/usr/local/bin" \
     COURSIER_CACHE="/usr/share/coursier/cache" \
     SBT_HOME="${SBT_HOME}" \
-    PATH=${PATH}:${SBT_HOME}/bin \
-    JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64
+    PATH="${PATH}:${SBT_HOME}/bin:/usr/local/bin" \
+    CC="/usr/bin/clang-${LLVM_VERSION}" \
+    CXX="/usr/bin/clang++-${LLVM_VERSION}"
 
-ARG basedir=${JAVA_HOME}
-ARG mandir=${basedir}/man
-
-COPY --from=JDK /usr/lib/jvm/zulu-${JAVA_VERSION}-azure-amd64 ${JAVA_HOME}
-RUN set -ex; \
-	\
-# deal with slim variants not having man page directories (which causes "update-alternatives" to fail)
-	if [ ! -d /usr/share/man/man1 ]; then \
-		mkdir -p /usr/share/man/man1; \
-	fi; \
-	\
-    mkdir -p /usr/lib/jvm/; \
-    cd "${basedir}/bin"; \
-    for i in *; do \
-        update-alternatives --install "/usr/bin/${i}" "${i}" "$basedir/bin/${i}" 1100; \
-    done \
- && \
-# update-alternatives so that future installs of other OpenJDK versions don't change /usr/bin/java
-    update-alternatives --get-selections | awk -v home="$(readlink -f "${JAVA_HOME}")" 'index($3, home) == 1 { $2 = "manual"; print | "update-alternatives --set-selections" }'; \
-# ... and verify that it actually worked for one of the alternatives we care about
-	update-alternatives --query java | grep -q 'Status: manual'
-
-ENV PATH ${JAVA_HOME}/bin:${PATH}
-
+COPY --from=downloader /tmp/corretto.key /tmp/corretto.key
+COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
 COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
-
-# Install Python and Jupyter
-RUN \
- --mount=type=cache,target=/var/cache/apt \
- --mount=type=cache,target=/var/lib/apt \
- apt-get update -qq \
- && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
- && add-apt-repository ppa:deadsnakes/ppa -y \
- && apt-get -qqy autoremove --purge ${DEPENDENCIES} \
- && apt-get install -qqy --no-install-recommends "python${PYTHON_VERSION}" "python${PYTHON_VERSION}-distutils" \
- && update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python${PYTHON_VERSION}" 31000 \
- && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
- && apt-get clean
-
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
 COPY --chown=1000:1000 --from=downloader /tmp/coursier /usr/local/bin/cs
 
-RUN chmod +x /usr/local/bin/cs
+# Install Python and Jupyter
+RUN apt-get update -qq \
+ && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
+ && cat /tmp/corretto.key | apt-key add - \
+ && rm -rf /tmp/corretto.key \
+ && echo "deb https://apt.corretto.aws stable main" > /etc/apt/sources.list.d/aws-corretto.list \
+ && cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
+ && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && add-apt-repository ppa:git-core/ppa -y \
+ && add-apt-repository ppa:deadsnakes/ppa -y \
+ && apt-get update -qq \
+ && apt-get install -qqy --no-install-recommends "java-${JAVA_VERSION}-amazon-corretto-jdk" ${DEPENDENCIES} \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /tmp/llvm-snapshot.gpg.key
 
-RUN mkdir -p "${COURSIER_CACHE}" \
- && python3 /tmp/get-pip.py \
+RUN chmod +x /usr/local/bin/cs \
+ && mkdir -p "${COURSIER_CACHE}" \
+ && update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python${PYTHON_VERSION}" 31000 \
+ && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
+ && python3 /tmp/get-pip.py --no-cache-dir pip==21.3 \
  && pip --no-cache-dir install -U setuptools \
  && pip --no-cache-dir install -U jupyter notebook jupyterlab jupyterhub \
     jupyter_core jupyter_client \
     sqlalchemy tornado jinja2 traitlets requests \
-&& rm -rf /tmp/*
+ && rm -rf /tmp/*
+
+FROM base
 
 ARG SCALA_VERSION
 ARG SCALA_FULL_VERSION="${SCALA_VERSION}"
@@ -121,16 +114,9 @@ USER java
 
 ENV PATH="${PATH}:/home/java/.local/bin"
 
-FROM base
-
-LABEL maintenar="Kenji Saito <ken-yo@mbr.nifty.com>"
-
-ARG SCALA_VERSION
-ARG SCALA_FULL_VERSION="${SCALA_VERSION}"
 # ARG SCALA2_LATEST_VERSION
 # ARG SCALA3_VERSION
 ARG ALMOND_VERSION
-ARG PYTHON_VERSION
 
 USER java
 

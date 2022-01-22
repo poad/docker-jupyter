@@ -1,5 +1,4 @@
 ARG JDK_MAJOR_VERSION="17"
-ARG ZULU_APT_KEY="0xB1998361219BD9C9"
 
 ARG UBUNTU_CODENAME="focal"
 
@@ -10,17 +9,17 @@ ARG SCALA_VERSION="2.13.4"
 ARG ALMOND_VERSION="0.11.2"
 ARG IERL_VERSION="0.4.0"
 
+ARG PYTHON_VERSION=3.10
+
 ARG LLVM_VERSION=13
 ARG NODE_VERSION="16.x"
 
 FROM alpine:3 AS downloader
 
 ARG NODE_VERSION
-ARG JAVA_URL
 
 ARG SBT_VERSION
 ARG IERL_VERSION
-
 
 RUN ARCH=$(apk --print-arch) \
  && apk --update add --no-cache --virtual .build-deps \
@@ -28,7 +27,7 @@ RUN ARCH=$(apk --print-arch) \
     gnupg \
     xz \
  && rm -rf /var/cache/apk/* \
- && curl -sSLo /tmp/zulu-repo_all.deb https://cdn.azul.com/zulu/bin/zulu-repo_1.0.0-3_all.deb \
+ && curl -sSLo /tmp/corretto.key https://apt.corretto.aws/corretto.key \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && curl -sSLo /tmp/ierl "https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl" \
  && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
@@ -47,7 +46,6 @@ LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 ENV LANG C.UTF-8
 
 ARG JDK_MAJOR_VERSION
-ARG ZULU_APT_KEY
 
 ARG SBT_VERSION
 ARG SCALA_VERSION
@@ -57,6 +55,7 @@ ARG ALMOND_VERSION
 ARG IERL_VERSION
 
 ARG LLVM_VERSION
+ARG PYTHON_VERSION
 
 ARG USER_NAME="node"
 ARG USER_HOME=/home/${USER_NAME}
@@ -71,8 +70,8 @@ USER root
 
 WORKDIR /tmp
 
-COPY --from=downloader /tmp/zulu-repo_all.deb /tmp/zulu-repo_all.deb
 COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
+COPY --from=downloader /tmp/corretto.key /tmp/corretto.key
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
 COPY --chown=1000:1000 assets/tmp/requirements.txt /tmp/requirements.txt
 COPY --chown=1000:1000 --from=downloader /tmp/ierl /tmp/ierl 
@@ -125,8 +124,10 @@ ARG DEPENDENCIES="\
         make \
         nodejs \
         patch \
-        python3-dev \
-        python3.10 \
+        python${PYTHON_VERSION} \
+        python${PYTHON_VERSION}-dev \
+        python${PYTHON_VERSION}-distutils \
+        libpython${PYTHON_VERSION}-dev \
         unzip \
         xz-utils \
         zlib1g-dev \
@@ -140,11 +141,13 @@ RUN chmod +x /usr/local/bin/cs
 ARG DEBIAN_FRONTEND=noninteractive
 
 # extra dependencies (over what buildpack-deps already includes)
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "${ZULU_APT_KEY}" \
- && apt-get install /tmp/zulu-repo_all.deb \
- && apt-get update -qq \
- && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common "zulu${JDK_MAJOR_VERSION}-ca-jdk" \
+RUN apt-get update -qq \
+ && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
+ && cat /tmp/corretto.key | apt-key add - \
+ && rm -rf /tmp/corretto.key \
+ && echo "deb https://apt.corretto.aws stable main" > /etc/apt/sources.list.d/aws-corretto.list \
  && cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
+ && curl -sL https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
  && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
  && add-apt-repository ppa:git-core/ppa -y \
  && add-apt-repository ppa:deadsnakes/ppa -y \
@@ -152,17 +155,20 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "${ZULU_AP
  && /tmp/setup_nodejs.sh \
  && dpkg -i /tmp/erlang-solutions_all.deb \
  && apt-get update -qq \
- && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
+ && apt-get install -qqy --no-install-recommends "java-${JDK_MAJOR_VERSION}-amazon-corretto-jdk" ${DEPENDENCIES} \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /tmp/llvm-snapshot.gpg.key /tmp/setup_nodejs.sh
 
-RUN python3 /tmp/get-pip.py \
+RUN npm install -g npm \
+ && npm install -g yarn configurable-http-proxy \
+ && update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python${PYTHON_VERSION}" 31000 \
+ && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
+ && python /tmp/get-pip.py --no-cache-dir \
  && pip3 install --no-cache-dir -U setuptools pip \
  && pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
- && npm install -g yarn configurable-http-proxy \
  && npm -g i --unsafe-perm ijavascript \
  && ijsinstall --install=global \
  && rm -f /tmp/requirements.txt /tmp/get-pip.py \

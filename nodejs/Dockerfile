@@ -2,6 +2,7 @@ ARG UBUNTU_CODENAME="focal"
 
 ARG NODE_VERSION="16.x"
 ARG LLVM_VERSION=13
+ARG PYTHON_VERSION=3.10
 
 FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
 
@@ -22,6 +23,7 @@ ARG USER_NAME="node"
 ARG USER_HOME=/home/${USER_NAME}
 
 ARG LLVM_VERSION
+ARG PYTHON_VERSION
 
 ENV LANGUAGE="en_US:en"
 ENV LC_ALL="en_US.UTF-8"
@@ -82,10 +84,10 @@ ARG DEPENDENCIES="\
   make \
   nodejs \
   patch \
-  python3-dev \
-  python3.9 \
-  python3.9-dev \
-  libpython3.9-dev \
+  python${PYTHON_VERSION} \
+  python${PYTHON_VERSION}-dev \
+  python${PYTHON_VERSION}-distutils \
+  libpython${PYTHON_VERSION}-dev \
   unzip \
   xz-utils \
   zlib1g-dev \
@@ -106,7 +108,9 @@ RUN cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
  && rm -rf /var/lib/apt/lists \
  && rm -rf /tmp/llvm-snapshot.gpg.key /tmp/setup_nodejs.sh
 
-RUN python3 /tmp/get-pip.py --no-cache-dir \
+RUN update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python${PYTHON_VERSION}" 31000 \
+ && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
+ && python /tmp/get-pip.py --no-cache-dir \
  && pip3 install --no-cache-dir -U pip \
  && pip install --no-cache-dir -U setuptools \
  && npm -g i npm \

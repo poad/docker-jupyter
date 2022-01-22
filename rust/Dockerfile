@@ -1,4 +1,5 @@
 ARG LLVM_VERSION=13
+ARG PYTHON_VERSION=3.10
 
 FROM alpine:3 AS downloader
 
@@ -15,6 +16,7 @@ LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 ENV LANG C.UTF-8
 
 ARG LLVM_VERSION
+ARG PYTHON_VERSION
 
 ARG USER_NAME=jupyter
 ARG USER_HOME=/home/${USER_NAME}
@@ -68,7 +70,10 @@ ARG DEPENDENCIES="\
         libzmq3-dev \
         make \
         patch \
-        python3.10 \
+        python${PYTHON_VERSION} \
+        python${PYTHON_VERSION}-dev \
+        python${PYTHON_VERSION}-distutils \
+        libpython${PYTHON_VERSION}-dev \
         unzip \
         xz-utils \
         zlib1g-dev \
@@ -76,10 +81,7 @@ ARG DEPENDENCIES="\
         uuid-dev"
 
 # extra dependencies (over what buildpack-deps already includes)
-RUN \
- --mount=type=cache,target=/var/cache/apt \
- --mount=type=cache,target=/var/lib/apt \
- apt-get update -qq \
+RUN apt-get update -qq \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && curl -sL https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
  && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
@@ -88,8 +90,11 @@ RUN \
  && apt-get update -qq \
  && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
  && apt-get clean \
- && rm -rf /var/lib/apt/lists/* \
- && python3 /tmp/get-pip.py \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python${PYTHON_VERSION}" 31000 \
+ && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
+ && python /tmp/get-pip.py --no-cache-dir \
  && pip install --no-cache-dir -U setuptools \
  && pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
