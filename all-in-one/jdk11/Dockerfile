@@ -141,7 +141,8 @@ RUN chmod +x /usr/local/bin/cs
 ARG DEBIAN_FRONTEND=noninteractive
 
 # extra dependencies (over what buildpack-deps already includes)
-RUN apt-get update -qq \
+RUN rm -rf /var/lib/apt/lists/* \
+ && apt-get update -qq \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && cat /tmp/corretto.key | apt-key add - \
  && rm -rf /tmp/corretto.key \

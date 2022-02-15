@@ -74,7 +74,8 @@ COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
 COPY --chown=1000:1000 --from=downloader /tmp/coursier /usr/local/bin/cs
 
 # Install Python and Jupyter
-RUN apt-get update -qq \
+RUN rm -rf /var/lib/apt/lists/* \
+    && apt-get update -qq \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && cat /tmp/corretto.key | apt-key add - \
  && rm -rf /tmp/corretto.key \

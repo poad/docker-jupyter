@@ -47,6 +47,9 @@ COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 ENV CC="/usr/bin/clang-${LLVM_VERSION}"
 ENV CXX="/usr/bin/clang++-${LLVM_VERSION}"
 
+ENV CXXFLAGS="-stdlib=libstdc++"
+ENV LDLIBS="-lstdc++"
+
 ARG DEPENDENCIES="\
   autoconf \
   automake \
@@ -102,6 +105,7 @@ ARG DEPENDENCIES="\
 
 RUN cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
  && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && rm -rf /var/lib/apt/lists/* \
  && apt-get update -qq \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && add-apt-repository ppa:git-core/ppa -y \

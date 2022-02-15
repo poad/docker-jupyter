@@ -81,7 +81,8 @@ ARG DEPENDENCIES="\
         uuid-dev"
 
 # extra dependencies (over what buildpack-deps already includes)
-RUN apt-get update -qq \
+RUN rm -rf /var/lib/apt/lists/* \
+ && apt-get update -qq \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && curl -sL https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
  && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
