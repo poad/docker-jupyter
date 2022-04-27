@@ -127,11 +127,12 @@ RUN update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python$
  && npm -g i yarn configurable-http-proxy
 
 RUN pip install --no-cache-dir -r /tmp/requirements.txt \
+ && rm -f /tmp/requirements.txt /tmp/get-pip.py \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
  && npm -g i --unsafe-perm ijavascript \
  && ijsinstall --install=global \
- && rm -f /tmp/requirements.txt /tmp/get-pip.py \
+ && npm -g i tslab \
  && groupadd -g 1000 "${USER_NAME}" \
  && useradd -g 1000 -l -m -s /bin/false -u 1000 "${USER_NAME}"
 
@@ -160,15 +161,3 @@ HEALTHCHECK CMD [ "npm", "--version" ]
 EXPOSE 8888
 
 CMD ["jupyter", "lab"]
-
-FROM base AS typescript
-
-USER root
-
-ARG USER_NAME
-
-RUN npm install -g itypescript \
- && its --install=global
-
-USER ${USER_NAME}
-

@@ -21,8 +21,7 @@ jobs:
           { dir: 'java', tag: 'java', platforms: 'linux/amd64,linux/arm64', target: '' },
           { dir: 'rust', tag: 'rust', platforms: 'linux/amd64,linux/arm64', target: '' },
           { dir: 'scala', tag: 'scala', platforms: 'linux/amd64,linux/arm64', target: '' },
-          { dir: 'nodejs', tag: 'nodejs', platforms: 'linux/amd64,linux/arm64', target: '' },
-          { dir: 'nodejs', tag: 'nodejs', platforms: 'linux/amd64,linux/arm64', target: 'typescript' }
+          { dir: 'nodejs', tag: 'nodejs', platforms: 'linux/amd64,linux/arm64', target: '' }
         ]    
     runs-on: ubuntu-latest
     steps:

@@ -22,7 +22,7 @@ Jupyter notebook with follow kernels based JDK 8
 - Elixir ([ierl](https://github.com/filmor/ierl))
 - LFE ([ierl](https://github.com/filmor/ierl))
 - Node.js ([IJavascript](https://github.com/n-riesco/ijavascript))
-- TypeScript ([ITypescript](https://github.com/nearbydelta/itypescript))
+- TypeScript ([tslab](https://github.com/yunabe/tslab))
 
 ### All in one based JDK 11
 
@@ -38,7 +38,7 @@ Jupyter notebook with follow kernels based JDK 11
 - Elixir ([ierl](https://github.com/filmor/ierl))
 - LFE ([ierl](https://github.com/filmor/ierl))
 - Node.js ([IJavascript](https://github.com/n-riesco/ijavascript))
-- TypeScript ([ITypescript](https://github.com/nearbydelta/itypescript))
+- TypeScript ([tslab](https://github.com/yunabe/tslab))
 
 ### All in one based JDK 17
 
@@ -54,7 +54,7 @@ Jupyter notebook with follow kernels based JDK 17
 - Elixir ([ierl](https://github.com/filmor/ierl))
 - LFE ([ierl](https://github.com/filmor/ierl))
 - Node.js ([IJavascript](https://github.com/n-riesco/ijavascript))
-- TypeScript ([ITypescript](https://github.com/nearbydelta/itypescript))
+- TypeScript ([tslab](https://github.com/yunabe/tslab))
 
 ### Java
 
@@ -94,4 +94,4 @@ Jupyter notebook with [IJavascript](https://github.com/n-riesco/ijavascript)
 docker pull poad/docker-jupyter:typescript
 ```
 
-Jupyter notebook with TypeScript ([ITypescript](https://github.com/nearbydelta/itypescript))
+Jupyter notebook with TypeScript ([tslab](https://github.com/yunabe/tslab))

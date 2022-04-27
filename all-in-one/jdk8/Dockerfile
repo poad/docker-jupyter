@@ -168,13 +168,17 @@ RUN npm install -g npm \
  && python /tmp/get-pip.py --no-cache-dir \
  && pip3 install --no-cache-dir -U setuptools pip \
  && pip install --no-cache-dir -r /tmp/requirements.txt \
- && jupyter serverextension enable --py jupyterlab --sys-prefix \
+ && rm -f /tmp/requirements.txt /tmp/get-pip.py
+
+RUN jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
  && npm -g i --unsafe-perm ijavascript \
  && ijsinstall --install=global \
- && rm -f /tmp/requirements.txt /tmp/get-pip.py \
- && cd /tmp \
- && chmod u+x ierl \
+ && npm -g i tslab
+
+WORKDIR /tmp
+
+RUN chmod u+x ierl \
  && ./ierl install elixir \
  && ./ierl install lfe \
  && ./ierl install erlang \
@@ -190,11 +194,6 @@ RUN npm install -g npm \
  && cs launch --fork "almond:${ALMOND_VERSION}" -M almond.ScalaKernel --scala "${SCALA_VERSION}" -- --install --id scala$(echo "${SCALA_VERSION}" | cut -f1-2 -d. | sed "s/\.//") --display-name "Scala ($(echo ${SCALA_VERSION} | cut -f1-2 -d.))"
 # RUN cs launch --fork "almond:${ALMOND_VERSION}" -M almond.ScalaKernel --scala "${SCALA2_LATEST_VERSION}" -- --install --id "scala2-latest" --display-name "Scala (2.x latest)" \
 # RUN cs launch --fork "almond:${ALMOND_VERSION}" -M almond.ScalaKernel --scala "${SCALA3_VERSION}" -- --install --id scala$(echo "${SCALA3_VERSION}" | cut -f1-2 -d. | sed "s/\.//") --display-name "Scala ($(echo ${SCALA3_VERSION} | cut -f1-2 -d.))" \
-
-RUN npm install -g itypescript \
- && its --install=global \
- && npm install -g itypescript \
- && its --install=global
 
 USER ${USER_NAME}
 
