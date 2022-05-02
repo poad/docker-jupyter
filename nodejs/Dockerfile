@@ -130,14 +130,10 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt \
  && rm -f /tmp/requirements.txt /tmp/get-pip.py \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
- && npm -g i --unsafe-perm ijavascript \
- && ijsinstall --install=global \
  && npm -g i tslab \
+ && tslab install \
  && groupadd -g 1000 "${USER_NAME}" \
  && useradd -g 1000 -l -m -s /bin/false -u 1000 "${USER_NAME}"
-
-# RUN npm -g i ijavascript-plotly
-# RUN jupyter labextension install jupyterlab-plotly @jupyter-widgets/jupyterlab-manager plotlywidget
 
 USER ${USER_NAME}
 

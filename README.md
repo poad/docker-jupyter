@@ -21,8 +21,7 @@ Jupyter notebook with follow kernels based JDK 8
 - Erlang ([ierl](https://github.com/filmor/ierl))
 - Elixir ([ierl](https://github.com/filmor/ierl))
 - LFE ([ierl](https://github.com/filmor/ierl))
-- Node.js ([IJavascript](https://github.com/n-riesco/ijavascript))
-- TypeScript ([tslab](https://github.com/yunabe/tslab))
+- Node.js/TypeScript ([tslab](https://github.com/yunabe/tslab))
 
 ### All in one based JDK 11
 
@@ -37,8 +36,7 @@ Jupyter notebook with follow kernels based JDK 11
 - Erlang ([ierl](https://github.com/filmor/ierl))
 - Elixir ([ierl](https://github.com/filmor/ierl))
 - LFE ([ierl](https://github.com/filmor/ierl))
-- Node.js ([IJavascript](https://github.com/n-riesco/ijavascript))
-- TypeScript ([tslab](https://github.com/yunabe/tslab))
+- Node.js/TypeScript ([tslab](https://github.com/yunabe/tslab))
 
 ### All in one based JDK 17
 
@@ -53,8 +51,7 @@ Jupyter notebook with follow kernels based JDK 17
 - Erlang ([ierl](https://github.com/filmor/ierl))
 - Elixir ([ierl](https://github.com/filmor/ierl))
 - LFE ([ierl](https://github.com/filmor/ierl))
-- Node.js ([IJavascript](https://github.com/n-riesco/ijavascript))
-- TypeScript ([tslab](https://github.com/yunabe/tslab))
+- Node.js/TypeScript ([tslab](https://github.com/yunabe/tslab))
 
 ### Java
 
@@ -86,7 +83,7 @@ Jupyter notebook with [almond](https://almond.sh)
 docker pull poad/docker-jupyter:nodejs
 ```
 
-Jupyter notebook with [IJavascript](https://github.com/n-riesco/ijavascript)
+Jupyter notebook with JavaScript ([tslab](https://github.com/yunabe/tslab))
 
 ### TypeScript
 

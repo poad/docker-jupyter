@@ -172,9 +172,8 @@ RUN npm install -g npm \
 
 RUN jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
- && npm -g i --unsafe-perm ijavascript \
- && ijsinstall --install=global \
- && npm -g i tslab
+ && npm -g i tslab \
+ && tslab install
 
 WORKDIR /tmp
 
