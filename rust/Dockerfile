@@ -10,7 +10,7 @@ RUN apk --update add --no-cache \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && curl --proto '=https' --tlsv1.2 -sSfo /tmp/rust_setup.sh https://sh.rustup.rs
 
-FROM buildpack-deps:focal-curl
+FROM buildpack-deps:${UBUNTU_CODENAME}-curl
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
