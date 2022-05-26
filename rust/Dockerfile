@@ -1,3 +1,5 @@
+ARG UBUNTU_CODENAME="focal"
+
 ARG LLVM_VERSION=14
 ARG PYTHON_VERSION=3.10
 
@@ -14,6 +16,8 @@ LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
+
+ARG UBUNTU_CODENAME
 
 ARG LLVM_VERSION
 ARG PYTHON_VERSION
@@ -83,9 +87,10 @@ ARG DEPENDENCIES="\
 # extra dependencies (over what buildpack-deps already includes)
 RUN rm -rf /var/lib/apt/lists/* \
  && apt-get update -qq \
+ && apt-get full-upgrade -qqy \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && curl -sL https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
- && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
  && add-apt-repository ppa:git-core/ppa -y \
  && add-apt-repository ppa:deadsnakes/ppa -y \
  && apt-get update -qq \

@@ -1,3 +1,5 @@
+ARG UBUNTU_CODENAME="focal"
+
 ARG JAVA_VERSION=11
 ARG SBT_VERSION="1.6.2"
 ARG SCALA_VERSION="2.13.4"
@@ -21,20 +23,22 @@ RUN ARCH=$(apk --print-arch) \
     gnupg \
     xz \
  && rm -rf /var/cache/apk/* \
- && curl -sSLo /tmp/corretto.key https://apt.corretto.aws/corretto.key \
+ && curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
  && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
  && curl -fLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-${ARCH}-pc-linux
 
 
-FROM ubuntu:focal AS base
+FROM ubuntu:${UBUNTU_CODENAME} AS base
 
 LABEL maintenar="Kenji Saito <ken-yo@mbr.nifty.com>"
 
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
+
+ARG UBUNTU_CODENAME
 
 ARG PYTHON_VERSION
 ARG LLVM_VERSION
@@ -67,7 +71,7 @@ ENV COURSIER_BIN_DIR="/usr/local/bin" \
     CC="/usr/bin/clang-${LLVM_VERSION}" \
     CXX="/usr/bin/clang++-${LLVM_VERSION}"
 
-COPY --from=downloader /tmp/corretto.key /tmp/corretto.key
+COPY --from=downloader /tmp/bellsoft.key /tmp/bellsoft.key
 COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
 COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
@@ -75,17 +79,18 @@ COPY --chown=1000:1000 --from=downloader /tmp/coursier /usr/local/bin/cs
 
 # Install Python and Jupyter
 RUN rm -rf /var/lib/apt/lists/* \
-    && apt-get update -qq \
+ && apt-get update -qq \
+ && apt-get full-upgrade -qqy \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
- && cat /tmp/corretto.key | apt-key add - \
- && rm -rf /tmp/corretto.key \
- && echo "deb https://apt.corretto.aws stable main" > /etc/apt/sources.list.d/aws-corretto.list \
+ && cat /tmp/bellsoft.key | apt-key add - \
+ && rm -rf /tmp/bellsoft.key \
+ && echo "deb [arch=$(dpkg --print-architecture)] https://apt.bell-sw.com/ stable main" > /etc/apt/sources.list.d/bell-sw.list \
  && cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
- && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
  && add-apt-repository ppa:git-core/ppa -y \
  && add-apt-repository ppa:deadsnakes/ppa -y \
  && apt-get update -qq \
- && apt-get install -qqy --no-install-recommends "java-${JAVA_VERSION}-amazon-corretto-jdk" ${DEPENDENCIES} \
+ && apt-get install -qqy --no-install-recommends "bellsoft-java${JAVA_VERSION}-full" ${DEPENDENCIES} \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /tmp/llvm-snapshot.gpg.key

@@ -27,7 +27,7 @@ RUN ARCH=$(apk --print-arch) \
     gnupg \
     xz \
  && rm -rf /var/cache/apk/* \
- && curl -sSLo /tmp/corretto.key https://apt.corretto.aws/corretto.key \
+ && curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && curl -sSLo /tmp/ierl "https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl" \
  && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
@@ -44,6 +44,8 @@ LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
+
+ARG UBUNTU_CODENAME
 
 ARG JDK_MAJOR_VERSION
 
@@ -71,7 +73,7 @@ USER root
 WORKDIR /tmp
 
 COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
-COPY --from=downloader /tmp/corretto.key /tmp/corretto.key
+COPY --from=downloader /tmp/bellsoft.key /tmp/bellsoft.key
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
 COPY --chown=1000:1000 assets/tmp/requirements.txt /tmp/requirements.txt
 COPY --chown=1000:1000 --from=downloader /tmp/ierl /tmp/ierl 
@@ -143,20 +145,21 @@ ARG DEBIAN_FRONTEND=noninteractive
 # extra dependencies (over what buildpack-deps already includes)
 RUN rm -rf /var/lib/apt/lists/* \
  && apt-get update -qq \
+ && apt-get full-upgrade -qqy \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
- && cat /tmp/corretto.key | apt-key add - \
- && rm -rf /tmp/corretto.key \
- && echo "deb https://apt.corretto.aws stable main" > /etc/apt/sources.list.d/aws-corretto.list \
+ && cat /tmp/bellsoft.key | apt-key add - \
+ && rm -rf /tmp/bellsoft.key \
+ && echo "deb [arch=$(dpkg --print-architecture)] https://apt.bell-sw.com/ stable main" > /etc/apt/sources.list.d/bell-sw.list \
  && cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
  && curl -sL https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
- && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
  && add-apt-repository ppa:git-core/ppa -y \
  && add-apt-repository ppa:deadsnakes/ppa -y \
  && chmod +x /tmp/setup_nodejs.sh \
  && /tmp/setup_nodejs.sh \
  && dpkg -i /tmp/erlang-solutions_all.deb \
  && apt-get update -qq \
- && apt-get install -qqy --no-install-recommends "java-${JDK_MAJOR_VERSION}-amazon-corretto-jdk" ${DEPENDENCIES} \
+ && apt-get install -qqy --no-install-recommends "bellsoft-java${JDK_MAJOR_VERSION}-full" ${DEPENDENCIES} \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /tmp/llvm-snapshot.gpg.key /tmp/setup_nodejs.sh

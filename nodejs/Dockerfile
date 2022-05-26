@@ -28,6 +28,8 @@ ENV LANG C.UTF-8
 ARG USER_NAME="node"
 ARG USER_HOME=/home/${USER_NAME}
 
+ARG UBUNTU_CODENAME
+
 ARG LLVM_VERSION
 ARG PYTHON_VERSION
 
@@ -104,9 +106,10 @@ ARG DEPENDENCIES="\
   uuid-dev"
 
 RUN cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
- && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
  && rm -rf /var/lib/apt/lists/* \
  && apt-get update -qq \
+ && apt-get full-upgrade -qqy \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && add-apt-repository ppa:git-core/ppa -y \
  && add-apt-repository ppa:deadsnakes/ppa -y \
