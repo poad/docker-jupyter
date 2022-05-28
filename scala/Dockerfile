@@ -10,20 +10,13 @@ ARG ALMOND_VERSION="0.11.2"
 ARG PYTHON_VERSION=3.10
 ARG LLVM_VERSION=14
 
-FROM alpine:3 AS downloader
+FROM ubuntu:${UBUNTU_CODENAME} AS downloader
 
 ARG SBT_VERSION
 
 WORKDIR /tmp
 
-RUN ARCH=$(apk --print-arch) \
- && apk --update add --no-cache --virtual .build-deps \
-    git \
-    curl \
-    gnupg \
-    xz \
- && rm -rf /var/cache/apk/* \
- && curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
+RUN curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
  && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py \

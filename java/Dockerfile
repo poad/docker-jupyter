@@ -1,4 +1,4 @@
-ARG UBUNTU_CODENAME="focal"
+ARG UBUNTU_CODENAME="jammy"
 
 ARG JDK_MAJOR_VERSION="17"
 ARG IJAVA_VERSION="1.3.0"
@@ -6,35 +6,14 @@ ARG NODE_VERSION="16.x"
 ARG PYTHON_VERSION=3.10
 ARG LLVM_VERSION=14
 
-FROM alpine:3 AS downloader
+FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
 
 ARG NODE_VERSION
 ARG IJAVA_VERSION
 
 WORKDIR /tmp
 
-ARG BUILD_DEPS="curl \
-        gnupg \
-        libssl1.1 \
-        git \
-        libffi-dev \
-        openssl-dev \
-        zlib \
-        bash \
-        m4 \
-        rsync \
-        alpine-sdk \
-        diffutils \
-        wget \
-        xz"
-
-RUN ARCH=$(apk --print-arch) \
- && apk --update add --no-cache --virtual .build-deps \
-    curl \
-    gnupg \
-    xz \
- && rm -rf /var/cache/apk/* \
- && curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
+RUN curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
  && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl -sSLo "ijava-${IJAVA_VERSION}.zip" "https://github.com/SpencerPark/IJava/releases/download/v${IJAVA_VERSION}/ijava-${IJAVA_VERSION}.zip" \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \

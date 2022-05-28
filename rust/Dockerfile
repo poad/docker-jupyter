@@ -1,13 +1,11 @@
-ARG UBUNTU_CODENAME="focal"
+ARG UBUNTU_CODENAME="jammy"
 
 ARG LLVM_VERSION=14
 ARG PYTHON_VERSION=3.10
 
-FROM alpine:3 AS downloader
+FROM buildpack-deps:${UBUNTU_CODENAME}-curl
 
-RUN apk --update add --no-cache \
-        curl \
- && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
+RUN curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && curl --proto '=https' --tlsv1.2 -sSfo /tmp/rust_setup.sh https://sh.rustup.rs
 
 FROM buildpack-deps:${UBUNTU_CODENAME}-curl
