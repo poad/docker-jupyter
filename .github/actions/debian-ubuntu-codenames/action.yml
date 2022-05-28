@@ -1,0 +1,20 @@
+name: 'Debian Ubuntu Codename mapping'
+description: 'Maps Debian code name to Ubuntu code name'
+inputs:
+  debian-codename:
+    description: 'code name of Debian'
+    required: true
+outputs:
+  ubuntu-codename:
+    description: "code name of Ubuntu"
+    value: ${{ steps.debian-ubuntu-codenames.outputs.ubuntu-codename }}
+runs:
+  using: "composite"
+  steps:
+    - name: resolves Ubuntu codename
+      id: debian-ubuntu-codenames
+      run: |
+        declare -A codenames=(["bookworm"]="jammy" ["bullseye"]="focal" ["buster"]="bionic")
+        codename=${codenames[${{ inputs.debian-codename }}]}
+        echo "::set-output name=ubuntu-codename::${codename}"
+      shell: bash

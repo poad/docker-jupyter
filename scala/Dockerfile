@@ -1,3 +1,5 @@
+ARG DISTRIBUTION="debian"
+ARG DEBIAN_CODENAME="bullseye"
 ARG UBUNTU_CODENAME="focal"
 
 ARG JAVA_VERSION=11
@@ -10,7 +12,7 @@ ARG ALMOND_VERSION="0.11.2"
 ARG PYTHON_VERSION=3.10
 ARG LLVM_VERSION=14
 
-FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
+FROM buildpack-deps:${DEBIAN_CODENAME}-curl AS downloader
 
 ARG SBT_VERSION
 
@@ -24,11 +26,10 @@ RUN apt-get update -qq \
  && curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
  && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
- && curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
- && curl -fLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-${ARCH}-pc-linux
+ && curl -fsSLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-${ARCH}-pc-linux
 
 
-FROM ubuntu:${UBUNTU_CODENAME} AS base
+FROM python:${PYTHON_VERSION}-${DEBIAN_CODENAME} AS base
 
 LABEL maintenar="Kenji Saito <ken-yo@mbr.nifty.com>"
 
@@ -36,6 +37,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 USER root
 
+ARG DEBIAN_CODENAME
 ARG UBUNTU_CODENAME
 
 ARG PYTHON_VERSION
@@ -51,10 +53,6 @@ ARG DEPENDENCIES="\
     lld-${LLVM_VERSION} \
     nodejs \
     patch \
-    python${PYTHON_VERSION} \
-    python${PYTHON_VERSION}-dev \
-    python${PYTHON_VERSION}-distutils \
-    libpython${PYTHON_VERSION}-dev \
     ca-certificates \
     software-properties-common"
 
@@ -71,7 +69,6 @@ ENV COURSIER_BIN_DIR="/usr/local/bin" \
 
 COPY --from=downloader /tmp/bellsoft.key /tmp/bellsoft.key
 COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
-COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
 COPY --chown=1000:1000 --from=downloader /tmp/coursier /usr/local/bin/cs
 
@@ -84,9 +81,9 @@ RUN rm -rf /var/lib/apt/lists/* \
  && rm -rf /tmp/bellsoft.key \
  && echo "deb [arch=$(dpkg --print-architecture)] https://apt.bell-sw.com/ stable main" > /etc/apt/sources.list.d/bell-sw.list \
  && cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
- && echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
- && add-apt-repository ppa:git-core/ppa -y \
- && add-apt-repository ppa:deadsnakes/ppa -y \
+ && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A1715D88E1DF1F24 \
+ && echo "deb http://apt.llvm.org/${DEBIAN_CODENAME}/ llvm-toolchain-${DEBIAN_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && echo "deb https://ppa.launchpadcontent.net/git-core/ppa/ubuntu/ ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/git-core.list \
  && apt-get update -qq \
  && apt-get install -qqy --no-install-recommends "bellsoft-java${JAVA_VERSION}-full" ${DEPENDENCIES} \
  && apt-get clean \
@@ -95,9 +92,8 @@ RUN rm -rf /var/lib/apt/lists/* \
 
 RUN chmod +x /usr/local/bin/cs \
  && mkdir -p "${COURSIER_CACHE}" \
- && update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python${PYTHON_VERSION}" 31000 \
  && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
- && python3 /tmp/get-pip.py --no-cache-dir pip==21.3 \
+ && pip3 install --no-cache-dir -U pip \
  && pip --no-cache-dir install -U setuptools \
  && pip --no-cache-dir install -U jupyter notebook jupyterlab jupyterhub \
     jupyter_core jupyter_client \

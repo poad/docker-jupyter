@@ -1,4 +1,6 @@
-ARG UBUNTU_CODENAME="jammy"
+ARG DISTRIBUTION="debian"
+ARG DEBIAN_CODENAME="bullseye"
+ARG UBUNTU_CODENAME="focal"
 
 ARG JDK_MAJOR_VERSION="17"
 ARG IJAVA_VERSION="1.3.0"
@@ -6,7 +8,7 @@ ARG NODE_VERSION="16.x"
 ARG PYTHON_VERSION=3.10
 ARG LLVM_VERSION=14
 
-FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
+FROM buildpack-deps:${DEBIAN_CODENAME}-curl AS downloader
 
 ARG NODE_VERSION
 ARG IJAVA_VERSION
@@ -19,19 +21,19 @@ RUN apt-get update -qq \
  && curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
  && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl -sSLo "ijava-${IJAVA_VERSION}.zip" "https://github.com/SpencerPark/IJava/releases/download/v${IJAVA_VERSION}/ijava-${IJAVA_VERSION}.zip" \
- && curl -sSL https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}" \
  && mkdir "ijava-${IJAVA_VERSION}" \
  && unzip "ijava-${IJAVA_VERSION}.zip" -d "ijava-${IJAVA_VERSION}"
 
 
-FROM buildpack-deps:${UBUNTU_CODENAME}-curl
+FROM python:${PYTHON_VERSION}-${DEBIAN_CODENAME}
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
 
+ARG DEBIAN_CODENAME
 ARG UBUNTU_CODENAME
 
 ARG JDK_MAJOR_VERSION
@@ -52,7 +54,6 @@ COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
 COPY --from=downloader /tmp/bellsoft.key /tmp/bellsoft.key
 COPY --from=downloader /tmp/setup_nodejs.sh /tmp/setup_nodejs.sh
 COPY --chown=1000:1000 requirements.txt /tmp/requirements.txt
-COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
 ARG DEPENDENCIES="\
     autoconf \
@@ -95,10 +96,6 @@ ARG DEPENDENCIES="\
     make \
     nodejs \
     patch \
-    python${PYTHON_VERSION} \
-    python${PYTHON_VERSION}-dev \
-    python${PYTHON_VERSION}-distutils \
-    libpython${PYTHON_VERSION}-dev \
     unzip \
     xz-utils \
     zlib1g-dev \
@@ -117,9 +114,9 @@ RUN rm -rf /var/lib/apt/lists/* \
  && rm -rf /tmp/bellsoft.key \
  && echo "deb [arch=$(dpkg --print-architecture)] https://apt.bell-sw.com/ stable main" > /etc/apt/sources.list.d/bell-sw.list \
  && cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
- && echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
- && add-apt-repository ppa:git-core/ppa -y \
- && add-apt-repository ppa:deadsnakes/ppa -y \
+ && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A1715D88E1DF1F24 \
+ && echo "deb http://apt.llvm.org/${DEBIAN_CODENAME}/ llvm-toolchain-${DEBIAN_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && echo "deb https://ppa.launchpadcontent.net/git-core/ppa/ubuntu/ ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/git-core.list \
  && chmod +x /tmp/setup_nodejs.sh \
  && /tmp/setup_nodejs.sh \
  && apt-get update -qq \
@@ -130,14 +127,13 @@ RUN rm -rf /var/lib/apt/lists/* \
 
 RUN npm install -g npm \
  && npm install -g yarn configurable-http-proxy \
- && update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python${PYTHON_VERSION}" 31000 \
  && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
- && python /tmp/get-pip.py --no-cache-dir \
- && pip install --no-cache-dir -U setuptools pip \
+ && pip3 install --no-cache-dir -U pip \
+ && pip install --no-cache-dir -U setuptools \
  && pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
- && rm -f /tmp/requirements.txt /tmp/get-pip.py \
+ && rm -f /tmp/requirements.txt \
  && groupadd -g 1000 "${USER_NAME}" \
  && useradd -g 1000 -l -m -s /bin/false -u 1000 "${USER_NAME}"
 

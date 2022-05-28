@@ -1,6 +1,8 @@
 ARG JDK_MAJOR_VERSION="8"
 
-ARG UBUNTU_CODENAME="jammy"
+ARG DISTRIBUTION="debian"
+ARG DEBIAN_CODENAME="bullseye"
+ARG UBUNTU_CODENAME="focal"
 
 ARG SBT_VERSION="1.6.2"
 ARG SCALA_VERSION="2.13.4"
@@ -14,7 +16,7 @@ ARG PYTHON_VERSION=3.10
 ARG LLVM_VERSION=14
 ARG NODE_VERSION="16.x"
 
-FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
+FROM buildpack-deps:${DEBIAN_CODENAME}-curl AS downloader
 
 ARG NODE_VERSION
 
@@ -30,20 +32,20 @@ RUN apt-get update -qq \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && curl -sSLo /tmp/ierl "https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl" \
  && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
- && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && curl --proto '=https' --tlsv1.2 -sSfo /tmp/rust_setup.sh https://sh.rustup.rs \
  && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}" \
  && curl -sSLo /tmp/erlang-solutions_all.deb https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb \
- && curl -fLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-${ARCH}-pc-linux
+ && curl -fsSLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-${ARCH}-pc-linux
 
 
-FROM buildpack-deps:${UBUNTU_CODENAME}-curl
+FROM python:${PYTHON_VERSION}-${DEBIAN_CODENAME}
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
 
+ARG DEBIAN_CODENAME
 ARG UBUNTU_CODENAME
 
 ARG JDK_MAJOR_VERSION
@@ -78,7 +80,6 @@ COPY --chown=1000:1000 assets/tmp/requirements.txt /tmp/requirements.txt
 COPY --chown=1000:1000 --from=downloader /tmp/ierl /tmp/ierl 
 COPY --chown=1000:1000 --from=downloader /tmp/rust_setup.sh /tmp/rust_setup.sh
 COPY --from=downloader /tmp/setup_nodejs.sh /tmp/setup_nodejs.sh
-COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 COPY --from=downloader /tmp/erlang-solutions_all.deb /tmp/erlang-solutions_all.deb
 
 ARG DEPENDENCIES="\
@@ -125,10 +126,6 @@ ARG DEPENDENCIES="\
         make \
         nodejs \
         patch \
-        python${PYTHON_VERSION} \
-        python${PYTHON_VERSION}-dev \
-        python${PYTHON_VERSION}-distutils \
-        libpython${PYTHON_VERSION}-dev \
         unzip \
         xz-utils \
         zlib1g-dev \
@@ -150,10 +147,9 @@ RUN rm -rf /var/lib/apt/lists/* \
  && rm -rf /tmp/bellsoft.key \
  && echo "deb [arch=$(dpkg --print-architecture)] https://apt.bell-sw.com/ stable main" > /etc/apt/sources.list.d/bell-sw.list \
  && cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
- && curl -sL https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
- && echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
- && add-apt-repository ppa:git-core/ppa -y \
- && add-apt-repository ppa:deadsnakes/ppa -y \
+ && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A1715D88E1DF1F24 \
+ && echo "deb http://apt.llvm.org/${DEBIAN_CODENAME}/ llvm-toolchain-${DEBIAN_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && echo "deb https://ppa.launchpadcontent.net/git-core/ppa/ubuntu/ ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/git-core.list \
  && chmod +x /tmp/setup_nodejs.sh \
  && /tmp/setup_nodejs.sh \
  && dpkg -i /tmp/erlang-solutions_all.deb \
@@ -165,12 +161,11 @@ RUN rm -rf /var/lib/apt/lists/* \
 
 RUN npm install -g npm \
  && npm install -g yarn configurable-http-proxy \
- && update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python${PYTHON_VERSION}" 31000 \
  && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
- && python /tmp/get-pip.py --no-cache-dir \
- && pip3 install --no-cache-dir -U setuptools pip \
+ && pip3 install --no-cache-dir -U pip \
+ && pip install --no-cache-dir -U setuptools \
  && pip install --no-cache-dir -r /tmp/requirements.txt \
- && rm -f /tmp/requirements.txt /tmp/get-pip.py
+ && rm -f /tmp/requirements.txt
 
 RUN jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \

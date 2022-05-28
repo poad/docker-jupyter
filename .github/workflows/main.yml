@@ -15,18 +15,25 @@ jobs:
     strategy:
       matrix:
         versions: [
-          { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8', platforms: 'linux/amd64', target: '' },
-          { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11', platforms: 'linux/amd64', target: '' },
-          { dir: 'all-in-one/jdk17', tag: 'all-in-one-jdk17', platforms: 'linux/amd64', target: '' },
-          { dir: 'java', tag: 'java', platforms: 'linux/amd64',linux/arm64', target: '' },
-          { dir: 'rust', tag: 'rust', platforms: 'linux/amd64', target: '' },
-          { dir: 'scala', tag: 'scala', platforms: 'linux/amd64,linux/arm64', target: '' },
-          { dir: 'nodejs', tag: 'nodejs', platforms: 'linux/amd64,linux/arm64', target: '' }
+          { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64', target: '' },
+          { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64', target: '' },
+          { dir: 'all-in-one/jdk17', tag: 'all-in-one-jdk17', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64', target: '' },
+          { dir: 'java', tag: 'java', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64,linux/arm64', target: '' },
+          { dir: 'rust', tag: 'rust', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64', target: '' },
+          { dir: 'scala', tag: 'scala', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64,linux/arm64', target: '' },
+          { dir: 'nodejs', tag: 'nodejs', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64,linux/arm64', target: '' }
         ]    
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
 
+    - uses: ./.github/actions/debian-ubuntu-codenames
+      if:  ${{ matrix.versions.distribution }} == 'debian'
+      id: ubuntu-codename
+      with:
+        debian-codename: ${{ matrix.versions.distribution-codename }}
+
+    - run: echo ${{ steps.ubuntu-codename.outputs.ubuntu-codename }}
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
 
@@ -60,6 +67,9 @@ jobs:
         tags: poad/docker-jupyter:${{ matrix.versions.tag }}
         target: ${{ matrix.versions.target }}
         build-args: |
+          DISTRIBUTION=$${{ matrix.versions.distribution }}
+          DEBIAN_CODENAME=${{ matrix.versions.distribution-codename }}
+          UBUNTU_CODENAME=${{ steps.ubuntu-codename.outputs.ubuntu-codename }}
           BUILDKIT_INLINE_CACHE=1
   
     - name: "Build and push ${{ matrix.versions.tag }}"
@@ -73,4 +83,7 @@ jobs:
         tags: poad/docker-jupyter:${{ matrix.versions.tag }}
         target: ${{ matrix.versions.target }}
         build-args: |
+          DISTRIBUTION=$${{ matrix.versions.distribution }}
+          DEBIAN_CODENAME=${{ matrix.versions.distribution-codename }}
+          UBUNTU_CODENAME=${{ steps.ubuntu-codename.outputs.ubuntu-codename }}
           BUILDKIT_INLINE_CACHE=1

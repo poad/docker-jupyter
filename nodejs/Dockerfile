@@ -1,4 +1,6 @@
-ARG UBUNTU_CODENAME="jammy"
+ARG DISTRIBUTION="debian"
+ARG DEBIAN_CODENAME="bullseye"
+ARG UBUNTU_CODENAME="focal"
 
 ARG NODE_VERSION="16.x"
 ARG LLVM_VERSION=14
@@ -7,15 +9,14 @@ ARG PYTHON_VERSION=3.10
 ARG USER_NAME="node"
 ARG USER_HOME="/home/${USER_NAME}"
 
-FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
+FROM buildpack-deps:${DEBIAN_CODENAME}-curl AS downloader
 
 ARG NODE_VERSION
 
-RUN curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
- && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
+RUN curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}"
 
-FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS base
+FROM python:${PYTHON_VERSION}-${DEBIAN_CODENAME}
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
@@ -28,6 +29,7 @@ ENV LANG C.UTF-8
 ARG USER_NAME="node"
 ARG USER_HOME=/home/${USER_NAME}
 
+ARG DEBIAN_CODENAME
 ARG UBUNTU_CODENAME
 
 ARG LLVM_VERSION
@@ -44,7 +46,6 @@ WORKDIR /tmp
 COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
 COPY --chown=1000:1000 requirements.txt /tmp/requirements.txt
 COPY --from=downloader /tmp/setup_nodejs.sh /tmp/setup_nodejs.sh
-COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 
 ENV CC="/usr/bin/clang-${LLVM_VERSION}"
 ENV CXX="/usr/bin/clang++-${LLVM_VERSION}"
@@ -95,10 +96,6 @@ ARG DEPENDENCIES="\
   make \
   nodejs \
   patch \
-  python${PYTHON_VERSION} \
-  python${PYTHON_VERSION}-dev \
-  python${PYTHON_VERSION}-distutils \
-  libpython${PYTHON_VERSION}-dev \
   unzip \
   xz-utils \
   zlib1g-dev \
@@ -106,13 +103,13 @@ ARG DEPENDENCIES="\
   uuid-dev"
 
 RUN cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
- && echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A1715D88E1DF1F24 \
+ && echo "deb http://apt.llvm.org/${DEBIAN_CODENAME}/ llvm-toolchain-${DEBIAN_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && echo "deb https://ppa.launchpadcontent.net/git-core/ppa/ubuntu/ ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/git-core.list \
  && rm -rf /var/lib/apt/lists/* \
  && apt-get update -qq \
  && apt-get full-upgrade -qqy \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
- && add-apt-repository ppa:git-core/ppa -y \
- && add-apt-repository ppa:deadsnakes/ppa -y \
  && chmod +x /tmp/setup_nodejs.sh \
  && /tmp/setup_nodejs.sh \
  && apt-get update -qq \
@@ -121,9 +118,7 @@ RUN cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
  && rm -rf /var/lib/apt/lists \
  && rm -rf /tmp/llvm-snapshot.gpg.key /tmp/setup_nodejs.sh
 
-RUN update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python${PYTHON_VERSION}" 31000 \
- && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
- && python /tmp/get-pip.py --no-cache-dir \
+RUN update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
  && pip3 install --no-cache-dir -U pip \
  && pip install --no-cache-dir -U setuptools \
  && npm -g i npm \

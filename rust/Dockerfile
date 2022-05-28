@@ -1,20 +1,22 @@
-ARG UBUNTU_CODENAME="jammy"
+ARG DISTRIBUTION="debian"
+ARG DEBIAN_CODENAME="bullseye"
+ARG UBUNTU_CODENAME="focal"
 
 ARG LLVM_VERSION=14
 ARG PYTHON_VERSION=3.10
 
-FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
+FROM buildpack-deps:${DEBIAN_CODENAME}-curl AS downloader
 
-RUN curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
- && curl --proto '=https' --tlsv1.2 -sSfo /tmp/rust_setup.sh https://sh.rustup.rs
+RUN curl --proto '=https' --tlsv1.2 -sSfo /tmp/rust_setup.sh https://sh.rustup.rs
 
-FROM buildpack-deps:${UBUNTU_CODENAME}-curl
+FROM python:${PYTHON_VERSION}-${DEBIAN_CODENAME}
 
 LABEL maintainer="Kenji Saito<ken-yo@mbr.nifty.com>"
 
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
 
+ARG DEBIAN_CODENAME
 ARG UBUNTU_CODENAME
 
 ARG LLVM_VERSION
@@ -27,7 +29,6 @@ RUN groupadd -g 1000 ${USER_NAME}  \
  && useradd -g 1000 -l -m -s /bin/false -u 1000 ${USER_NAME} 
 
 COPY requirements.txt /tmp/requirements.txt
-COPY --from=downloader /tmp/get-pip.py /tmp/get-pip.py
 COPY --from=downloader --chown=${USER_NAME}:${USER_NAME} /tmp/rust_setup.sh /tmp/rust_setup.sh
 
 
@@ -72,10 +73,6 @@ ARG DEPENDENCIES="\
         libzmq3-dev \
         make \
         patch \
-        python${PYTHON_VERSION} \
-        python${PYTHON_VERSION}-dev \
-        python${PYTHON_VERSION}-distutils \
-        libpython${PYTHON_VERSION}-dev \
         unzip \
         xz-utils \
         zlib1g-dev \
@@ -88,23 +85,21 @@ RUN rm -rf /var/lib/apt/lists/* \
  && apt-get full-upgrade -qqy \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && curl -sL https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
- && echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
- && add-apt-repository ppa:git-core/ppa -y \
- && add-apt-repository ppa:deadsnakes/ppa -y \
+ && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A1715D88E1DF1F24 \
+ && echo "deb http://apt.llvm.org/${DEBIAN_CODENAME}/ llvm-toolchain-${DEBIAN_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
+ && echo "deb https://ppa.launchpadcontent.net/git-core/ppa/ubuntu/ ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/git-core.list \
  && apt-get update -qq \
  && apt-get install -qqy --no-install-recommends ${DEPENDENCIES} \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-RUN update-alternatives --install "/usr/bin/python3" "python3" "/usr/bin/python${PYTHON_VERSION}" 31000 \
- && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
- && python /tmp/get-pip.py --no-cache-dir \
+RUN update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
+ && pip3 install --no-cache-dir -U pip \
  && pip install --no-cache-dir -U setuptools \
  && pip install --no-cache-dir -r /tmp/requirements.txt \
  && jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
- && jupyter notebook --generate-config --allow-root \
- && rm -rf /tmp/get-pip.py
+ && jupyter notebook --generate-config --allow-root
 
 # Install Rust kernel
 USER ${USER_NAME}
