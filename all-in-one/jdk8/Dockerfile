@@ -14,19 +14,18 @@ ARG PYTHON_VERSION=3.10
 ARG LLVM_VERSION=14
 ARG NODE_VERSION="16.x"
 
-FROM alpine:3 AS downloader
+FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
 
 ARG NODE_VERSION
 
 ARG SBT_VERSION
 ARG IERL_VERSION
 
-RUN ARCH=$(apk --print-arch) \
- && apk --update add --no-cache --virtual .build-deps \
-    curl \
-    gnupg \
-    xz \
- && rm -rf /var/cache/apk/* \
+RUN apt-get update -qq \
+ && apt-get full-upgrade -qqy \
+ && apt-get install -qqy --no-install-recommends unzip \
+ && ARCH=$(dpkg --print-architecture) \
+ && if [ "${ARCH}" = "arm64" ]; then ARCH="aarch64"; fi \
  && curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && curl -sSLo /tmp/ierl "https://github.com/filmor/ierl/releases/download/v${IERL_VERSION}/ierl" \

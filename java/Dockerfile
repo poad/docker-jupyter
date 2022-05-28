@@ -13,10 +13,13 @@ ARG IJAVA_VERSION
 
 WORKDIR /tmp
 
-RUN curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
+RUN apt-get update -qq \
+ && apt-get full-upgrade -qqy \
+ && apt-get install -qqy --no-install-recommends unzip \
+ && curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
  && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl -sSLo "ijava-${IJAVA_VERSION}.zip" "https://github.com/SpencerPark/IJava/releases/download/v${IJAVA_VERSION}/ijava-${IJAVA_VERSION}.zip" \
- && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
+ && curl -sSL https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}" \
  && mkdir "ijava-${IJAVA_VERSION}" \
  && unzip "ijava-${IJAVA_VERSION}.zip" -d "ijava-${IJAVA_VERSION}"

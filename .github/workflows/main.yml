@@ -15,11 +15,11 @@ jobs:
     strategy:
       matrix:
         versions: [
-          { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8', platforms: 'linux/amd64,linux/arm64', target: '' },
-          { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11', platforms: 'linux/amd64,linux/arm64', target: '' },
-          { dir: 'all-in-one/jdk17', tag: 'all-in-one-jdk17', platforms: 'linux/amd64,linux/arm64', target: '' },
-          { dir: 'java', tag: 'java', platforms: 'linux/amd64,linux/arm64', target: '' },
-          { dir: 'rust', tag: 'rust', platforms: 'linux/amd64,linux/arm64', target: '' },
+          { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8', platforms: 'linux/amd64', target: '' },
+          { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11', platforms: 'linux/amd64', target: '' },
+          { dir: 'all-in-one/jdk17', tag: 'all-in-one-jdk17', platforms: 'linux/amd64', target: '' },
+          { dir: 'java', tag: 'java', platforms: 'linux/amd64',linux/arm64', target: '' },
+          { dir: 'rust', tag: 'rust', platforms: 'linux/amd64', target: '' },
           { dir: 'scala', tag: 'scala', platforms: 'linux/amd64,linux/arm64', target: '' },
           { dir: 'nodejs', tag: 'nodejs', platforms: 'linux/amd64,linux/arm64', target: '' }
         ]    

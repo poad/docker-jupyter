@@ -10,13 +10,18 @@ ARG ALMOND_VERSION="0.11.2"
 ARG PYTHON_VERSION=3.10
 ARG LLVM_VERSION=14
 
-FROM ubuntu:${UBUNTU_CODENAME} AS downloader
+FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
 
 ARG SBT_VERSION
 
 WORKDIR /tmp
 
-RUN curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
+RUN apt-get update -qq \
+ && apt-get full-upgrade -qqy \
+ && apt-get install -qqy --no-install-recommends unzip \
+ && ARCH=$(dpkg --print-architecture) \
+ && if [ "${ARCH}" = "arm64" ]; then ARCH="aarch64"; fi \
+ && curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
  && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
  && curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py \

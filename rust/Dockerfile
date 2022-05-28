@@ -3,7 +3,7 @@ ARG UBUNTU_CODENAME="jammy"
 ARG LLVM_VERSION=14
 ARG PYTHON_VERSION=3.10
 
-FROM buildpack-deps:${UBUNTU_CODENAME}-curl
+FROM buildpack-deps:${UBUNTU_CODENAME}-curl AS downloader
 
 RUN curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
  && curl --proto '=https' --tlsv1.2 -sSfo /tmp/rust_setup.sh https://sh.rustup.rs
