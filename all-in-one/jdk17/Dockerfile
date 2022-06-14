@@ -5,10 +5,9 @@ ARG DEBIAN_CODENAME="bullseye"
 ARG UBUNTU_CODENAME="focal"
 
 ARG SBT_VERSION="1.6.2"
-ARG SCALA_VERSION="2.13.4"
-# ARG SCALA2_LATEST_VERSION="2.13.7"
-# ARG SCALA3_VERSION="3.0.4"
-ARG ALMOND_VERSION="0.11.2"
+ARG SCALA_VERSION="2.13.8"
+# ARG SCALA3_VERSION="3.0.2"
+ARG ALMOND_VERSION="0.13.0"
 ARG IERL_VERSION="0.4.0"
 
 ARG PYTHON_VERSION=3.10
@@ -182,14 +181,12 @@ RUN chmod u+x ierl \
  && ln -s "/usr/bin/clang-${LLVM_VERSION}" /usr/bin/clang \
  && groupadd -g 1000 "${USER_NAME}" \
  && useradd -g 1000 -l -m -s /bin/false -u 1000 "${USER_NAME}" \
- && cs bootstrap \
-      -r jitpack \
-      -i user -I "user:sh.almond:scala-kernel-api_${SCALA_VERSION}:${ALMOND_VERSION}" \
-      "sh.almond:scala-kernel_${SCALA_VERSION}:${ALMOND_VERSION}" \
-      -M almond.ScalaKernel \
-      --default=true --sources \
- && cs launch --fork "almond:${ALMOND_VERSION}" -M almond.ScalaKernel --scala "${SCALA_VERSION}" -- --install --id scala$(echo "${SCALA_VERSION}" | cut -f1-2 -d. | sed "s/\.//") --display-name "Scala ($(echo ${SCALA_VERSION} | cut -f1-2 -d.))"
-# RUN cs launch --fork "almond:${ALMOND_VERSION}" -M almond.ScalaKernel --scala "${SCALA2_LATEST_VERSION}" -- --install --id "scala2-latest" --display-name "Scala (2.x latest)" \
+ && SCALA_SHORT_VERSION="$(echo ${SCALA_VERSION} | cut -f1-2 -d.)" \
+ && SCALA_SHORT_VERSION_TRIMMED="$(echo ${SCALA_SHORT_VERSION} | tr -d .)" \
+ && echo "Installing almond ${ALMOND_VERSION} for Scala ${SCALA_SHORT_VERSION}" \
+ && echo "${SCALA_SHORT_VERSION}" \
+ && cs launch --fork almond:"${ALMOND_VERSION}" --scala "${SCALA_SHORT_VERSION}" -- --install \
+     --id "scala${SCALA_SHORT_VERSION}" --global --display-name "Scala (${SCALA_SHORT_VERSION})"
 # RUN cs launch --fork "almond:${ALMOND_VERSION}" -M almond.ScalaKernel --scala "${SCALA3_VERSION}" -- --install --id scala$(echo "${SCALA3_VERSION}" | cut -f1-2 -d. | sed "s/\.//") --display-name "Scala ($(echo ${SCALA3_VERSION} | cut -f1-2 -d.))" \
 
 USER ${USER_NAME}
