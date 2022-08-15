@@ -5,9 +5,9 @@ ARG UBUNTU_CODENAME="focal"
 ARG JAVA_VERSION=11
 ARG SBT_VERSION="1.7.1"
 ARG SCALA_VERSION="2.13.8"
-# ARG SCALA3_VERSION="3.0.2"
+ARG SCALA3_VERSION="3.1.3"
 ARG SBT_HOME=/usr/local/sbt
-ARG ALMOND_VERSION="0.13.0"
+ARG ALMOND_VERSION="0.13.1"
 ARG PYTHON_VERSION=3.10
 ARG LLVM_VERSION=14
 
@@ -113,7 +113,7 @@ USER java
 
 ENV PATH="${PATH}:/home/java/.local/bin"
 
-# ARG SCALA3_VERSION
+ARG SCALA3_VERSION
 ARG ALMOND_VERSION
 
 USER java
@@ -127,13 +127,26 @@ RUN SCALA_SHORT_VERSION="$(echo ${SCALA_VERSION} | cut -f1-2 -d.)" \
  && SCALA_SHORT_VERSION_TRIMMED="$(echo ${SCALA_SHORT_VERSION} | tr -d .)" \
  && echo "Installing almond ${ALMOND_VERSION} for Scala ${SCALA_SHORT_VERSION}" \
  && echo "${SCALA_SHORT_VERSION}" \
- && cs launch --fork almond:"${ALMOND_VERSION}" --scala "${SCALA_SHORT_VERSION}" -- --install \
-     --id "scala${SCALA_SHORT_VERSION}" --global --display-name "Scala (${SCALA_SHORT_VERSION})"
-
-# RUN echo "Installing almond ${ALMOND_VERSION} for Scala ${SCALA3_VERSION}" \
-#  && echo "${SCALA3_VERSION}" | cut -f1-2 -d.  | tr -d . \
-#  && cs launch --fork "almond:${ALMOND_VERSION}" --scala "${SCALA3_VERSION}" -- --install \
-#       --id "scala$(echo ${SCALA3_VERSION} | cut -f1-2 -d.)" --display-name "Scala ($(echo ${SCALA3_VERSION} | cut -f1-2 -d.))"
+ && cs bootstrap \
+      -r jitpack \
+      -i user -I "user:sh.almond:scala-kernel-api_${SCALA_VERSION}:${ALMOND_VERSION}" \
+      "sh.almond:scala-kernel_${SCALA_VERSION}:${ALMOND_VERSION}" \
+      --default=true --sources \
+      -o almond \
+ && ./almond --install --log info --metabrowse --id "scala${SCALA_SHORT_VERSION}" \
+      --global \
+      --display-name "Scala (${SCALA_SHORT_VERSION})" \
+ && rm -f almond \
+ && cs bootstrap \
+      -r jitpack \
+      -i user -I "user:sh.almond:scala-kernel-api_${SCALA3_VERSION}:${ALMOND_VERSION}" \
+      "sh.almond:scala-kernel_${SCALA3_VERSION}:${ALMOND_VERSION}" \
+      --default=true --sources \
+      -o almond \
+ && ./almond --install --log info --metabrowse --id scala$(echo ${SCALA3_VERSION} | cut -f1-2 -d. | tr -d .) \
+      --global \
+      --display-name "Scala ($(echo ${SCALA3_VERSION} | cut -f1-2 -d.))" \
+ && rm -f almond
 
 USER java
 
