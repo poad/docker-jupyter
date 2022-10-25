@@ -16,5 +16,5 @@ runs:
       run: |
         declare -A codenames=(["bookworm"]="jammy" ["bullseye"]="focal" ["buster"]="bionic")
         codename=${codenames[${{ inputs.debian-codename }}]}
-        echo "::set-output name=ubuntu-codename::${codename}"
+        echo "ubuntu-codename=${codename}" >> $GITHUB_OUTPUT
       shell: bash
