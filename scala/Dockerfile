@@ -46,6 +46,7 @@ ARG DEPENDENCIES="\
     libcurl4-openssl-dev \
     libssl-dev \
     build-essential \
+    cmake \
     git \
     clang-${LLVM_VERSION} \
     clang++-${LLVM_VERSION} \

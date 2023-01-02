@@ -57,6 +57,7 @@ ARG DEPENDENCIES="\
   autoconf \
   automake \
   bzip2 \
+  cmake \
   dpkg-dev \
   file \
   gcc \

@@ -60,6 +60,7 @@ ARG DEPENDENCIES="\
     automake \
     bzip2 \
     dpkg-dev \
+    cmake \
     erlang \
     file \
     gcc \
