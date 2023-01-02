@@ -10,6 +10,8 @@ on:
   schedule:
     - cron:  '15 0 * * 6'
 
+  workflow_dispatch:
+
 jobs:
   docker_build:
     strategy:
