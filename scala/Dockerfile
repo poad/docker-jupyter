@@ -92,14 +92,13 @@ RUN rm -rf /var/lib/apt/lists/* \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /tmp/llvm-snapshot.gpg.key
 
-ENV PATH ${PATH}:${HOME}/.cargo/bin
+ENV PATH="${HOME}/.cargo/bin:${PATH}"
 RUN chmod +x /tmp/rust_setup.sh \
  && /tmp/rust_setup.sh -y \
  && rm -rf  /tmp/rust_setup.sh
 
 RUN chmod +x /usr/local/bin/cs \
  && mkdir -p "${COURSIER_CACHE}" \
- && $HOME/.cargo/env \
  && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
  && pip3 install --no-cache-dir -U pip \
  && pip --no-cache-dir install -U setuptools \
