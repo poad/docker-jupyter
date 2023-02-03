@@ -25,7 +25,8 @@ RUN apt-get update -qq \
  && curl -sSLo /tmp/bellsoft.key https://download.bell-sw.com/pki/GPG-KEY-bellsoft \
  && curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
  && curl -sSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C /usr/local \
- && curl -fsSLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-${ARCH}-pc-linux
+ && curl -fsSLo /tmp/coursier https://github.com/coursier/launchers/raw/master/cs-${ARCH}-pc-linux \
+ && curl --proto '=https' --tlsv1.2 -sSfo /tmp/rust_setup.sh https://sh.rustup.rs
 
 
 FROM python:${PYTHON_VERSION}-${DEBIAN_CODENAME} AS base
@@ -71,6 +72,7 @@ COPY --from=downloader /tmp/bellsoft.key /tmp/bellsoft.key
 COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
 COPY --from=downloader ${SBT_HOME} ${SBT_HOME}
 COPY --chown=1000:1000 --from=downloader /tmp/coursier /usr/local/bin/cs
+COPY --from=downloader --chown=${USER_NAME}:${USER_NAME} /tmp/rust_setup.sh /tmp/rust_setup.sh
 
 # Install Python and Jupyter
 RUN rm -rf /var/lib/apt/lists/* \
@@ -90,8 +92,14 @@ RUN rm -rf /var/lib/apt/lists/* \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /tmp/llvm-snapshot.gpg.key
 
+ENV PATH ${PATH}:${HOME}/.cargo/bin
+RUN chmod +x /tmp/rust_setup.sh \
+ && /tmp/rust_setup.sh -y \
+ && rm -rf  /tmp/rust_setup.sh
+
 RUN chmod +x /usr/local/bin/cs \
  && mkdir -p "${COURSIER_CACHE}" \
+ && $HOME/.cargo/env \
  && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
  && pip3 install --no-cache-dir -U pip \
  && pip --no-cache-dir install -U setuptools \

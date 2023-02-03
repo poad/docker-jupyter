@@ -14,7 +14,8 @@ FROM buildpack-deps:${DEBIAN_CODENAME}-curl AS downloader
 ARG NODE_VERSION
 
 RUN curl -sSLo /tmp/llvm-snapshot.gpg.key https://apt.llvm.org/llvm-snapshot.gpg.key \
- && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}"
+ && curl -sLo /tmp/setup_nodejs.sh "https://deb.nodesource.com/setup_${NODE_VERSION}" \
+ && curl --proto '=https' --tlsv1.2 -sSfo /tmp/rust_setup.sh https://sh.rustup.rs
 
 FROM python:${PYTHON_VERSION}-${DEBIAN_CODENAME}
 
@@ -46,6 +47,7 @@ WORKDIR /tmp
 COPY --from=downloader /tmp/llvm-snapshot.gpg.key /tmp/llvm-snapshot.gpg.key
 COPY --chown=1000:1000 requirements.txt /tmp/requirements.txt
 COPY --from=downloader /tmp/setup_nodejs.sh /tmp/setup_nodejs.sh
+COPY --from=downloader --chown=${USER_NAME}:${USER_NAME} /tmp/rust_setup.sh /tmp/rust_setup.sh
 
 ENV CC="/usr/bin/clang-${LLVM_VERSION}"
 ENV CXX="/usr/bin/clang++-${LLVM_VERSION}"
@@ -118,6 +120,11 @@ RUN cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists \
  && rm -rf /tmp/llvm-snapshot.gpg.key /tmp/setup_nodejs.sh
+
+ENV PATH ${PATH}:${HOME}/.cargo/bin
+RUN chmod +x /tmp/rust_setup.sh \
+ && /tmp/rust_setup.sh -y \
+ && rm -rf /tmp/rust_setup.sh
 
 RUN update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
  && pip3 install --no-cache-dir -U pip \
