@@ -81,7 +81,7 @@ RUN rm -rf /var/lib/apt/lists/* \
  && apt-get install --no-install-recommends -qqy ca-certificates gnupg2 binutils apt-utils software-properties-common \
  && cat /tmp/bellsoft.key | apt-key add - \
  && rm -rf /tmp/bellsoft.key \
- && echo "deb [arch=$(dpkg --print-architecture)] https://apt.bell-sw.com/ stable main" > /etc/apt/sources.list.d/bell-sw.list \
+ && echo "deb [arch=amd64] https://apt.bell-sw.com/ stable main" > /etc/apt/sources.list.d/bell-sw.list \
  && cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A1715D88E1DF1F24 \
  && echo "deb http://apt.llvm.org/${DEBIAN_CODENAME}/ llvm-toolchain-${DEBIAN_CODENAME}-${LLVM_VERSION} main" >> /etc/apt/sources.list.d/llvm-toolchain.list \
@@ -92,14 +92,14 @@ RUN rm -rf /var/lib/apt/lists/* \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /tmp/llvm-snapshot.gpg.key
 
-ENV PATH ${PATH}:${HOME}/.cargo/bin
+ENV PATH="${HOME}/.cargo/bin:${PATH}"
 RUN chmod +x /tmp/rust_setup.sh \
  && /tmp/rust_setup.sh -y \
  && rm -rf  /tmp/rust_setup.sh
 
 RUN chmod +x /usr/local/bin/cs \
  && mkdir -p "${COURSIER_CACHE}" \
- && $HOME/.cargo/env \
+ && chmod 774 ${HOME}/.cargo/env \
  && update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
  && pip3 install --no-cache-dir -U pip \
  && pip --no-cache-dir install -U setuptools \

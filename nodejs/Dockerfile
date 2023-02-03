@@ -121,20 +121,19 @@ RUN cat /tmp/llvm-snapshot.gpg.key | apt-key add - \
  && rm -rf /var/lib/apt/lists \
  && rm -rf /tmp/llvm-snapshot.gpg.key /tmp/setup_nodejs.sh
 
-ENV PATH ${PATH}:${HOME}/.cargo/bin
-RUN chmod +x /tmp/rust_setup.sh \
- && /tmp/rust_setup.sh -y \
- && rm -rf /tmp/rust_setup.sh
-
 RUN update-alternatives --install "/usr/bin/python" "python" "/usr/bin/python3" 31000 \
  && pip3 install --no-cache-dir -U pip \
  && pip install --no-cache-dir -U setuptools \
  && npm -g i npm \
  && npm -g i yarn configurable-http-proxy
 
-RUN pip install --no-cache-dir -r /tmp/requirements.txt \
- && rm -f /tmp/requirements.txt /tmp/get-pip.py \
- && jupyter serverextension enable --py jupyterlab --sys-prefix \
+ENV PATH="${HOME}/.cargo/bin:${PATH}"
+RUN chmod +x /tmp/rust_setup.sh \
+ && /tmp/rust_setup.sh -y \
+ && pip install --no-cache-dir -r /tmp/requirements.txt \
+ && rm -f /tmp/requirements.txt /tmp/get-pip.py
+
+RUN jupyter serverextension enable --py jupyterlab --sys-prefix \
  && jupyter nbextension enable --py widgetsnbextension \
  && npm -g i tslab \
  && tslab install \
