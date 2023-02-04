@@ -20,10 +20,10 @@ jobs:
           { dir: 'all-in-one/jdk8', tag: 'all-in-one-jdk8', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64', target: '' },
           { dir: 'all-in-one/jdk11', tag: 'all-in-one-jdk11', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64', target: '' },
           { dir: 'all-in-one/jdk17', tag: 'all-in-one-jdk17', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64', target: '' },
-          { dir: 'java', tag: 'java', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64,linux/arm64', target: '' },
+          { dir: 'java', tag: 'java', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64', target: '' },
           { dir: 'rust', tag: 'rust', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64', target: '' },
-          { dir: 'scala', tag: 'scala', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64,linux/arm64', target: '' },
-          { dir: 'nodejs', tag: 'nodejs', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64,linux/arm64', target: '' }
+          { dir: 'scala', tag: 'scala', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64', target: '' },
+          { dir: 'nodejs', tag: 'nodejs', distribution: 'debian', distribution-codename: 'bullseye', platforms: 'linux/amd64', target: '' }
         ]    
     runs-on: ubuntu-latest
     steps:
